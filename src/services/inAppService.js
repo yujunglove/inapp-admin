@@ -1,7 +1,7 @@
-// services/inAppService.js
+// services/inAppService.js - 로컬 qdx-renderer 사용
 
 /**
- * qdx CDN 기반 InApp 서비스
+ * qdx 로컬 파일 기반 InApp 서비스
  */
 export class InAppService {
 
@@ -9,13 +9,13 @@ export class InAppService {
         api_key: "8jaAWd0Zp7POcZYLWDBdCg==",
         cntnrId: "easycore",
         serverUrl: "https://quadmax.co.kr",
-        scriptUrl: "https://quadmax.co.kr/qdx/qdx-renderer.js"
+        scriptPath: "./src/assets/qdx-renderer.js.umd.cjs" // 로컬 파일 경로
     };
 
     static isInitialized = false;
 
     /**
-     * qdx 라이브러리 로드 및 초기화
+     * qdx 라이브러리 로드 및 초기화 (다양한 방법으로 로컬 파일 시도)
      */
     static async loadQdx() {
         return new Promise((resolve, reject) => {
@@ -26,36 +26,69 @@ export class InAppService {
                 return;
             }
 
-            // 스크립트 태그 생성
-            const script = document.createElement('script');
-            script.src = this.config.scriptUrl;
-            script.async = true;
+            // 가능한 모든 경로 시도
+            const possiblePaths = [
+                './src/assets/qdx-renderer.js.umd.cjs',
+                '/src/assets/qdx-renderer.js.umd.cjs',
+                '../src/assets/qdx-renderer.js.umd.cjs',
+                './assets/qdx-renderer.js.umd.cjs',
+                '/assets/qdx-renderer.js.umd.cjs',
+                './public/assets/qdx-renderer.js.umd.cjs',
+                '/public/assets/qdx-renderer.js.umd.cjs',
+                `${window.location.origin}/src/assets/qdx-renderer.js.umd.cjs`
+            ];
 
-            script.onload = () => {
-                try {
-                    // qdx 초기화
-                    window.qdx.init({
-                        api_key: this.config.api_key,
-                        cntnrId: this.config.cntnrId,
-                        serverUrl: this.config.serverUrl
-                    });
+            let currentIndex = 0;
 
-                    this.isInitialized = true;
-                    console.log('✅ qdx 라이브러리 로드 및 초기화 완료');
-                    resolve(window.qdx);
-                } catch (error) {
-                    console.error('❌ qdx 초기화 실패:', error);
+            const tryLoadPath = (pathIndex) => {
+                if (pathIndex >= possiblePaths.length) {
+                    const error = new Error('모든 경로에서 로컬 qdx-renderer.js.umd.cjs 파일 로드 실패');
+                    console.error('❌', error);
+                    console.error('시도한 경로들:', possiblePaths);
                     reject(error);
+                    return;
                 }
+
+                const currentPath = possiblePaths[pathIndex];
+                console.log(`📦 로컬 파일 로드 시도 ${pathIndex + 1}/${possiblePaths.length}:`, currentPath);
+
+                const script = document.createElement('script');
+                script.src = currentPath;
+                script.async = true;
+
+                script.onload = () => {
+                    try {
+                        // qdx 초기화
+                        if (window.qdx && typeof window.qdx.init === 'function') {
+                            window.qdx.init({
+                                api_key: this.config.api_key,
+                                cntnrId: this.config.cntnrId,
+                                serverUrl: this.config.serverUrl
+                            });
+
+                            this.isInitialized = true;
+                            console.log('✅ 로컬 qdx 라이브러리 로드 및 초기화 완료:', currentPath);
+                            resolve(window.qdx);
+                        } else {
+                            throw new Error('qdx 객체가 로드되지 않았습니다.');
+                        }
+                    } catch (error) {
+                        console.error('❌ qdx 초기화 실패:', error);
+                        reject(error);
+                    }
+                };
+
+                script.onerror = () => {
+                    console.log(`❌ 로드 실패: ${currentPath}`);
+                    // 다음 경로 시도
+                    setTimeout(() => tryLoadPath(pathIndex + 1), 100);
+                };
+
+                document.head.appendChild(script);
             };
 
-            script.onerror = () => {
-                const error = new Error('qdx 스크립트 로드 실패');
-                console.error('❌', error);
-                reject(error);
-            };
-
-            document.head.appendChild(script);
+            // 첫 번째 경로부터 시도
+            tryLoadPath(0);
         });
     }
 
@@ -70,9 +103,9 @@ export class InAppService {
     }
 
     /**
-     * 인앱 메시지 표시
+     * 인앱 메시지 표시 (새로운 JSON 형식)
      * @param {string} id - 메시지 ID
-     * @param {Object} data - 인앱 메시지 데이터
+     * @param {Object} data - 인앱 메시지 데이터 (새로운 형식)
      */
     static async showMessage(id, data) {
         try {
@@ -84,8 +117,23 @@ export class InAppService {
                 existingPopup.remove();
             }
 
-            // 인앱 메시지 표시
-            qdx.showMsg(id, data);
+            // 새로운 형식의 데이터 검증
+            console.log('📤 새로운 형식 인앱 메시지 데이터:', data);
+
+            if (!data.display || !data.theme || !Array.isArray(data.show)) {
+                throw new Error('유효하지 않은 데이터 형식입니다.');
+            }
+
+            // 인앱 메시지 표시 (서버 요청 차단 제거)
+            if (qdx.showMsg) {
+                qdx.showMsg(id, data);
+            } else if (qdx.init && typeof qdx.init === 'function') {
+                // 기존 형식의 경우
+                qdx.showMsg(id, data);
+            } else {
+                throw new Error('showMsg 메서드를 찾을 수 없습니다.');
+            }
+
             console.log('✅ 인앱 메시지 표시 성공:', { id, data });
 
             return true;
@@ -110,7 +158,7 @@ export class InAppService {
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>InApp JSON 데이터</title>
+                    <title>InApp JSON 데이터 (새로운 형식)</title>
                     <style>
                         body { 
                             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -158,6 +206,14 @@ export class InAppService {
                             border-radius: 6px;
                             margin-bottom: 20px;
                         }
+                        .format-info {
+                            background: #dbeafe;
+                            border: 1px solid #3b82f6;
+                            color: #1e40af;
+                            padding: 12px;
+                            border-radius: 6px;
+                            margin-bottom: 20px;
+                        }
                     </style>
                 </head>
                 <body>
@@ -165,7 +221,10 @@ export class InAppService {
                         <div class="alert">
                             ⚠️ qdx 라이브러리를 사용할 수 없어 JSON 데이터를 표시합니다.
                         </div>
-                        <h1>InApp JSON 데이터</h1>
+                        <div class="format-info">
+                            ℹ️ 새로운 형식: template과 theme이 통합되었고, show 배열로 표시 컴포넌트를 관리합니다.
+                        </div>
+                        <h1>InApp JSON 데이터 (새로운 형식)</h1>
                         <pre id="jsonData">${jsonString}</pre>
                         <button class="btn" onclick="copyToClipboard()">📋 클립보드에 복사</button>
                         <button class="btn" onclick="window.close()">❌ 닫기</button>
@@ -192,7 +251,7 @@ export class InAppService {
             `);
         } else {
             // 팝업 차단된 경우 콘솔에 출력
-            console.log('📄 InApp JSON 데이터:', data);
+            console.log('📄 InApp JSON 데이터 (새로운 형식):', data);
             alert('팝업이 차단되었습니다. 콘솔을 확인해주세요.');
         }
     }

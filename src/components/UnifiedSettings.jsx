@@ -1,4 +1,4 @@
-// components/UnifiedSettings.jsx - 완전한 버전
+// components/UnifiedSettings.jsx - 완전한 버전 (수정됨)
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { validateSettings, clearFieldError } from '../utils/ValidationUtils';
 import { getDisplayConfig, getActiveComponents, createInitialSettings, canToggleComponent } from '../config/displayTypeConfig';
@@ -36,10 +36,10 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
         buttons: {}
     });
     const [toast, setToast] = useState({ show: false, message: '' });
-    const [buttons, setButtons] = useState([
-        { id: 1, text: '', url: '', target: 'current' },
-        { id: 2, text: '', url: '', target: 'current' }
-    ]);
+
+    // 버튼 개수를 동적으로 관리 (최대 2개)
+    const [buttons, setButtons] = useState([]);
+    const [nextButtonId, setNextButtonId] = useState(1);
 
     // 검증 실행 여부 상태 추가
     const [hasValidationRun, setHasValidationRun] = useState(false);
@@ -57,6 +57,10 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
             imageUrl: prev.imageUrl,
             linkUrl: prev.linkUrl
         }));
+
+        // 버튼 초기화
+        setButtons([]);
+        setNextButtonId(1);
 
         // 표시형태 변경 시 검증 상태 초기화
         setHasValidationRun(false);
@@ -115,6 +119,43 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
         // 검증이 실행된 경우에만 에러 해제
         if (hasValidationRun && validationErrors[field]) {
             setValidationErrors(prev => clearFieldError(prev, field));
+        }
+    };
+
+    // 버튼 추가
+    const addButton = () => {
+        if (buttons.length < 2) {
+            const newButton = {
+                id: nextButtonId,
+                text: '',
+                url: '',
+                target: 'current'
+            };
+            setButtons(prev => [...prev, newButton]);
+            setNextButtonId(prev => prev + 1);
+        }
+    };
+
+    // 버튼 삭제
+    const removeButton = (buttonId) => {
+        setButtons(prev => prev.filter(btn => btn.id !== buttonId));
+        setUrlValidation(prev => {
+            const newButtons = { ...prev.buttons };
+            delete newButtons[buttonId];
+            return { ...prev, buttons: newButtons };
+        });
+
+        // 검증 에러도 제거
+        if (hasValidationRun) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                Object.keys(newErrors).forEach(key => {
+                    if (key.startsWith(`button_${buttonId}_`)) {
+                        delete newErrors[key];
+                    }
+                });
+                return newErrors;
+            });
         }
     };
 
@@ -204,7 +245,10 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
     // 외부 호출용 함수
     useImperativeHandle(ref, () => ({
         validateSettings: validate,
-        getJsonData: generateJsonData
+        getJsonData: generateJsonData,
+        updateTodayOption: (checked) => {
+            setSettings(prev => ({ ...prev, showTodayOption: checked }));
+        }
     }));
 
     // 토글 가능 여부 계산
@@ -259,8 +303,11 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
                     canToggle={canToggleButton}
                     onToggle={handleToggle}
                     onUpdateButton={updateButton}
+                    onAddButton={addButton}
+                    onRemoveButton={removeButton}
                     onUrlValidation={checkUrlValidation}
                     showToast={showToast}
+                    maxButtons={2}
                 />
             )}
 

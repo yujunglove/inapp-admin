@@ -1,181 +1,306 @@
+// components/settings/ButtonSettings.jsx - 동적 버튼 관리 (완전 버전)
 import React from 'react';
-import { ToggleBox, RadioButton } from '../UIComponents';
-import { handleUrlCheck } from '../../utils/ValidationUtils';
 
-/**
- * 버튼 설정 컴포넌트
- */
 export const ButtonSettings = ({
                                    settings,
                                    buttons,
                                    validationErrors,
                                    urlValidation,
-                                   canToggle = true, // 기본값 추가
+                                   canToggle,
                                    onToggle,
                                    onUpdateButton,
+                                   onAddButton,
+                                   onRemoveButton,
                                    onUrlValidation,
-                                   showToast
+                                   showToast,
+                                   maxButtons = 2
                                }) => {
+    const handleUrlChange = (buttonId, url) => {
+        onUpdateButton(buttonId, 'url', url);
+        onUrlValidation(url, 'url', buttonId);
+    };
+
+    const getButtonKeyId = () => {
+        // 버튼 설정의 고유 키 생성
+        return 'button_settings';
+    };
+
     return (
         <div style={{
-            border: '1px solid #e5e7eb',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
             borderRadius: '12px',
+            padding: '24px',
             marginBottom: '24px'
         }}>
             <div style={{
-                background: settings.buttonEnabled ? '#f5f9fc' : '#f9fafb',
-                padding: '16px 24px',
-                borderBottom: settings.buttonEnabled ? '1px solid #e5e7eb' : 'none',
                 display: 'flex',
-                justifyContent: 'space-between',
                 alignItems: 'center',
-                borderRadius: '12px 12px 0px 0px',
+                justifyContent: 'space-between',
+                marginBottom: '20px'
             }}>
-                <div>
-                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>버튼 설정</h4>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
-                        액션 버튼을 추가하고 설정합니다
-                    </p>
-                </div>
+                <h3 style={{
+                    margin: 0,
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    color: '#1f2937'
+                }}>
+                    버튼 설정
+                </h3>
+
                 {canToggle && (
-                    <ToggleBox
-                        checked={settings.buttonEnabled}
-                        onChange={() => onToggle('buttonEnabled')}
-                    />
+                    <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer'
+                    }}>
+                        <input
+                            type="checkbox"
+                            checked={settings.buttonEnabled}
+                            onChange={() => onToggle('buttonEnabled')}
+                            style={{
+                                width: '20px',
+                                height: '20px',
+                                cursor: 'pointer'
+                            }}
+                        />
+                        <span style={{ fontSize: '14px', color: '#374151' }}>
+                            버튼 사용
+                        </span>
+                    </label>
                 )}
             </div>
 
             {settings.buttonEnabled && (
-                <div style={{ padding: '24px' }}>
-                    {buttons.map((button, index) => (
-                        <div key={button.id} style={{
-                            border: '1px solid #d1d5db',
-                            padding: '20px',
-                            borderRadius: '8px',
+                <div>
+                    {/* 버튼 추가 영역 */}
+                    {buttons.length < maxButtons && (
+                        <div style={{
                             marginBottom: '16px',
-                            background: '#f9fafb'
+                            padding: '16px',
+                            border: '2px dashed #d1d5db',
+                            borderRadius: '8px',
+                            textAlign: 'center'
                         }}>
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '16px'
+                            <button
+                                onClick={onAddButton}
+                                style={{
+                                    background: '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '10px 20px',
+                                    borderRadius: '6px',
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    margin: '0 auto'
+                                }}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                                버튼 추가 ({buttons.length}/{maxButtons})
+                            </button>
+                        </div>
+                    )}
+
+                    {/* 버튼 목록 */}
+                    {buttons.map((button, index) => (
+                        <div
+                            key={button.id}
+                            id={`qdx_btn_${getButtonKeyId()}_${index + 1}`}
+                            style={{
+                                background: 'white',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '8px',
+                                padding: '20px',
+                                marginBottom: '16px',
+                                position: 'relative'
+                            }}
+                        >
+                            {/* 삭제 버튼 */}
+                            <button
+                                onClick={() => onRemoveButton(button.id)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '12px',
+                                    right: '12px',
+                                    background: '#ef4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '24px',
+                                    height: '24px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '12px'
+                                }}
+                                title="버튼 삭제"
+                            >
+                                ×
+                            </button>
+
+                            <h4 style={{
+                                margin: '0 0 16px 0',
+                                fontSize: '16px',
+                                fontWeight: '500',
+                                color: '#374151'
                             }}>
-                                <h6 style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>
-                                    버튼 {index + 1}
-                                </h6>
-                            </div>
+                                버튼 {index + 1}
+                            </h4>
 
                             {/* 버튼 텍스트 */}
-                            <div style={{ marginBottom: '12px' }}>
+                            <div style={{ marginBottom: '16px' }}>
                                 <label style={{
                                     display: 'block',
                                     marginBottom: '6px',
                                     fontSize: '14px',
-                                    fontWeight: '500'
+                                    fontWeight: '500',
+                                    color: '#374151'
                                 }}>
-                                    버튼 텍스트
+                                    버튼 텍스트 *
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="버튼 텍스트 입력"
                                     value={button.text}
                                     onChange={(e) => onUpdateButton(button.id, 'text', e.target.value)}
+                                    placeholder="버튼에 표시될 텍스트를 입력하세요"
                                     style={{
                                         width: '100%',
                                         padding: '10px 12px',
-                                        border: `1px solid ${validationErrors[`button_${button.id}_text`] ? '#dc2626' : '#d1d5db'}`,
+                                        border: validationErrors[`button_${button.id}_text`] ? '2px solid #ef4444' : '1px solid #d1d5db',
                                         borderRadius: '6px',
                                         fontSize: '14px',
-                                        boxSizing: 'border-box',
-                                        background: validationErrors[`button_${button.id}_text`] ? '#fef2f2' : 'white'
+                                        outline: 'none',
+                                        transition: 'border-color 0.2s ease'
                                     }}
                                 />
+                                {validationErrors[`button_${button.id}_text`] && (
+                                    <p style={{
+                                        color: '#ef4444',
+                                        fontSize: '12px',
+                                        margin: '4px 0 0 0'
+                                    }}>
+                                        {validationErrors[`button_${button.id}_text`]}
+                                    </p>
+                                )}
                             </div>
 
-                            {/* 링크 URL */}
-                            <div style={{ marginBottom: '12px' }}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginBottom: '6px'
+                            {/* 버튼 URL */}
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{
+                                    display: 'block',
+                                    marginBottom: '6px',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    color: '#374151'
                                 }}>
-                                    <label style={{ fontSize: '14px', fontWeight: '500' }}>링크 URL</label>
-                                    <button
-                                        onClick={() => {
-                                            handleUrlCheck(button.url, showToast);
-                                            onUrlValidation(button.url, 'url', button.id);
-                                        }}
-                                        style={{
-                                            padding: '4px 8px',
-                                            background: 'rgb(249, 250, 251)',
-                                            color: 'rgb(107, 114, 128)',
-                                            border: '1px solid rgb(229, 231, 235)',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
-                                    </button>
-                                </div>
+                                    링크 URL
+                                </label>
                                 <div style={{ position: 'relative' }}>
                                     <input
-                                        type="text"
-                                        placeholder="https://example.com"
+                                        type="url"
                                         value={button.url}
-                                        onChange={(e) => onUpdateButton(button.id, 'url', e.target.value)}
+                                        onChange={(e) => handleUrlChange(button.id, e.target.value)}
+                                        placeholder="https://example.com"
                                         style={{
                                             width: '100%',
-                                            padding: '10px 12px',
-                                            border: `1px solid ${validationErrors[`button_${button.id}_url`] ? '#dc2626' : '#d1d5db'}`,
+                                            padding: '10px 40px 10px 12px',
+                                            border: validationErrors[`button_${button.id}_url`] ? '2px solid #ef4444' : '1px solid #d1d5db',
                                             borderRadius: '6px',
                                             fontSize: '14px',
-                                            boxSizing: 'border-box',
-                                            background: validationErrors[`button_${button.id}_url`] ? '#fef2f2' : 'white',
-                                            paddingRight: urlValidation.buttons[button.id] ? '40px' : '16px'
+                                            outline: 'none',
+                                            transition: 'border-color 0.2s ease'
                                         }}
                                     />
-                                    {urlValidation.buttons[button.id] && (
+                                    {button.url && (
                                         <div style={{
                                             position: 'absolute',
                                             right: '12px',
                                             top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            color: '#10b981',
-                                            fontSize: '16px'
+                                            transform: 'translateY(-50%)'
                                         }}>
-                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
+                                            {urlValidation.buttons[button.id] ? (
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
+                                                    <path d="M20 6L9 17l-5-5"/>
+                                                </svg>
+                                            ) : (
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+                                                    <path d="M18 6L6 18M6 6l12 12"/>
+                                                </svg>
+                                            )}
                                         </div>
                                     )}
                                 </div>
+                                {validationErrors[`button_${button.id}_url`] && (
+                                    <p style={{
+                                        color: '#ef4444',
+                                        fontSize: '12px',
+                                        margin: '4px 0 0 0'
+                                    }}>
+                                        {validationErrors[`button_${button.id}_url`]}
+                                    </p>
+                                )}
                             </div>
 
-                            {/* 링크 열기 */}
+                            {/* 링크 타겟 */}
                             <div>
                                 <label style={{
                                     display: 'block',
                                     marginBottom: '6px',
                                     fontSize: '14px',
-                                    fontWeight: '500'
+                                    fontWeight: '500',
+                                    color: '#374151'
                                 }}>
-                                    링크 열기
+                                    링크 열기 방식
                                 </label>
-                                <RadioButton
-                                    options={[
-                                        { value: 'current', label: '현재창' },
-                                        { value: 'new', label: '새창' }
-                                    ]}
+                                <select
                                     value={button.target}
-                                    onChange={(value) => onUpdateButton(button.id, 'target', value)}
-                                    name={`buttonTarget_${button.id}`}
-                                />
+                                    onChange={(e) => onUpdateButton(button.id, 'target', e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        fontSize: '14px',
+                                        outline: 'none',
+                                        background: 'white',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="current">현재 창에서 열기</option>
+                                    <option value="new">새 창에서 열기</option>
+                                </select>
                             </div>
                         </div>
                     ))}
+
+                    {buttons.length === 0 && (
+                        <div style={{
+                            textAlign: 'center',
+                            padding: '40px 20px',
+                            color: '#6b7280',
+                            fontSize: '14px'
+                        }}>
+                            버튼을 추가해주세요.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {!settings.buttonEnabled && (
+                <div style={{
+                    textAlign: 'center',
+                    padding: '40px 20px',
+                    color: '#6b7280',
+                    fontSize: '14px'
+                }}>
+                    버튼을 사용하려면 위의 토글을 활성화해주세요.
                 </div>
             )}
         </div>

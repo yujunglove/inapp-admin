@@ -21,15 +21,15 @@ export const canToggleComponent = (displayType, componentType) => {
 };
 
 /**
- * 표시형태별 컴포넌트 활성화 설정
+ * 표시형태별 컴포넌트 활성화 설정 (새로운 형식)
  */
 export const displayComponentConfig = {
     BAR: {
-        image: true,       // 바형은 이미지 없음
+        image: true,        // 바형은 이미지 가능
         text: true,         // 텍스트 필수
-        button: false,       // 버튼 가능
+        button: false,      // 버튼 불가
         theme: 'T3',        // 바형 전용 테마
-        template: 'M3',     // 바형 전용 템플릿
+        defaultLocation: 'TOP',
         forceEnabled: {     // 강제 활성화
             text: true      // 바형은 텍스트 무조건 활성화
         }
@@ -38,16 +38,16 @@ export const displayComponentConfig = {
         image: true,        // 박스형은 이미지 가능
         text: true,         // 텍스트 가능
         button: true,       // 버튼 가능
-        theme: 'T1',        // 박스형 전용 테마
-        template: 'M1',     // 박스형 전용 템플릿
+        theme: 'T4',        // 박스형 전용 테마 (T1에서 T4로 변경)
+        defaultLocation: 'TOP',
         forceEnabled: {}    // 자유 선택
     },
     STAR: {
         image: false,       // 별점형은 이미지 없음
         text: true,         // 텍스트 필수 (별점 + 텍스트)
         button: false,      // 버튼 없음
-        theme: 'T2',        // 별점형 전용 테마
-        template: 'M2',     // 별점형 전용 템플릿
+        theme: 'T9',        // 별점형 전용 테마
+        defaultLocation: 'MID',
         forceEnabled: {     // 강제 활성화
             text: true      // 별점형은 텍스트 무조건 활성화
         }
@@ -56,9 +56,10 @@ export const displayComponentConfig = {
         image: true,        // 슬라이드형은 이미지 필수
         text: true,         // 텍스트 가능
         button: true,       // 버튼 가능
-        theme: 'T4',        // 슬라이드형 전용 테마
-        template: 'M4',     // 슬라이드형 전용 템플릿
+        theme: 'T11',       // 슬라이드형 전용 테마
+        defaultLocation: 'MID',
         forceEnabled: {     // 강제 활성화
+            image: true     // 슬라이드형은 이미지 무조건 활성화
         }
     }
 };
@@ -95,23 +96,22 @@ export const getActiveComponents = (displayType) => {
 };
 
 /**
- * 표시형태별 테마/템플릿 가져오기
+ * 표시형태별 테마 가져오기 (template은 제거됨)
  * @param {string} displayType - 표시형태
- * @returns {Object} {theme: string, template: string}
+ * @returns {Object} {theme: string}
  */
 export const getThemeTemplate = (displayType) => {
     const config = getDisplayConfig(displayType);
 
     return {
-        theme: config.theme,
-        template: config.template
+        theme: config.theme
     };
 };
 
 /**
  * 표시형태별 기본 위치 가져오기
  * @param {string} displayType - 표시형태
- * @returns {string} 기본 위치 (TOP, MIDDLE, BOTTOM)
+ * @returns {string} 기본 위치 (TOP, MID, BOTTOM)
  */
 export const getDefaultLocation = (displayType) => {
     const config = getDisplayConfig(displayType);
@@ -128,8 +128,8 @@ export const createInitialSettings = (displayType) => {
 
     return {
         // 강제 활성화 항목은 true, 나머지는 false로 시작
-        imageEnabled: false,
-        textEnabled: false,
+        imageEnabled: config.forceEnabled?.image || false,
+        textEnabled: config.forceEnabled?.text || false,
         buttonEnabled: false, // 버튼은 항상 기본 비활성화
         location: config.defaultLocation,
         clickAction: '',
@@ -138,7 +138,7 @@ export const createInitialSettings = (displayType) => {
         linkUrl: '',
         titleContent: '',
         bodyContent: '',
-        showTodayOption: false
+        showTodayOption: true // 기본적으로 true
     };
 };
 
@@ -148,8 +148,8 @@ export const createInitialSettings = (displayType) => {
 export const displayValidationRules = {
     BAR: {
         textRequired: true,     // 텍스트 필수
-        imageAllowed: true,    // 이미지 가능
-        buttonAllowed: false     // 버튼 불가
+        imageAllowed: true,     // 이미지 가능
+        buttonAllowed: false    // 버튼 불가
     },
     BOX: {
         textRequired: false,    // 텍스트 선택
@@ -163,7 +163,7 @@ export const displayValidationRules = {
     },
     SLIDE: {
         textRequired: false,    // 텍스트 선택
-        imageAllowed: true,     // 이미지 가능
+        imageAllowed: true,     // 이미지 가능 (강제)
         buttonAllowed: true     // 버튼 가능
     }
 };

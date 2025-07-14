@@ -1,4 +1,4 @@
-// InAppModule.jsx - 수정된 버전
+// InAppModule.jsx - CDN CSS + 로컬 JS 하이브리드 (최종 버전)
 import React, { useEffect, useRef, useState } from 'react';
 import {
     ModuleWrapper,
@@ -8,102 +8,122 @@ import {
     StepTitle,
     StepNumber,
     ContentArea,
-    NavigationArea,
-    BackButton,
-    NextButton,
     PreviewSection
 } from './styles/StyledComponents';
 
 import {
-    BackIcon,
-    NextIcon,
-    DisplayIcon,
-    ImageIcon
+    DisplayIcon
 } from './components/Icons';
-
-// 분리된 컴포넌트들 import
-import SelectionGridComponent from './components/SelectionGrid';
-import { UnifiedSettings } from './components/UnifiedSettings';
-
-// 커스텀 훅들 import
-import { useInAppData, useInAppSelections } from './hooks/useInAppData';
-
-// 유틸리티 함수들 import
-import {
-    getCurrentItems,
-    getCurrentStepTitle,
-    getCurrentStepNumber,
-    isNextEnabled,
-    isLastStep
-} from './utils/inAppUtils';
 
 // 서비스 import
 import { InAppService } from './services/inAppService';
 
-// 기본 미리보기 데이터 생성 함수
-const getDefaultPreviewData = (displayType) => {
-    const baseData = {
-        images: [{
-            seq: 1,
-            url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhFjJgDxmK9CVk3XxTiitDyZLIOKJvtZNLrg&s",
-            action: "",
-            linkUrl: "",
-            linkOpt: ""
-        }],
+// 공통코드 기반 설정 데이터
+const DISPLAY_TYPES = {
+    BAR: {
+        name: "바형",
+        defaultLocation: "TOP",
+        themes: [
+            { code: "T1", name: "이미지형", template: "M1" },
+            { code: "T2", name: "텍스트형", template: "M2" },
+            { code: "T3", name: "이미지 + 텍스트형", template: "M3" }
+        ]
+    },
+    BOX: {
+        name: "박스형",
+        defaultLocation: "MID",
+        themes: [
+            { code: "T4", name: "이미지형", template: "M1" },
+            { code: "T5", name: "이미지형 + 버튼1", template: "M4" },
+            { code: "T6", name: "이미지형 + 버튼2", template: "M5" },
+            { code: "T7", name: "이미지형 + 텍스트", template: "M3" },
+            { code: "T8", name: "이미지형 + 텍스트 + 버튼1", template: "M6" },
+            { code: "T9", name: "이미지형 + 텍스트 + 버튼2", template: "M7" }
+        ]
+    },
+    SLIDE: {
+        name: "슬라이드형",
+        defaultLocation: "MID",
+        themes: [
+            { code: "T10", name: "이미지형", template: "M1" },
+            { code: "T11", name: "이미지형 + 버튼1", template: "M4" },
+            { code: "T12", name: "이미지형 + 버튼2", template: "M5" },
+            { code: "T13", name: "이미지형 + 텍스트", template: "M3" },
+            { code: "T14", name: "이미지형 + 텍스트 + 버튼1", template: "M6" },
+            { code: "T15", name: "이미지형 + 텍스트 + 버튼2", template: "M7" }
+        ]
+    },
+    STAR: {
+        name: "별점형",
+        defaultLocation: "BOT",
+        themes: [
+            { code: "T16", name: "텍스트형", template: "M8" }
+        ]
+    }
+};
+
+const TEMPLATE_CONFIG = {
+    M1: { name: "이미지", hasImage: true, hasText: false, buttonCount: 0 },
+    M2: { name: "텍스트", hasImage: false, hasText: true, buttonCount: 0 },
+    M3: { name: "이미지 + 텍스트", hasImage: true, hasText: true, buttonCount: 0 },
+    M4: { name: "이미지 + 버튼 1", hasImage: true, hasText: false, buttonCount: 1 },
+    M5: { name: "이미지 + 버튼 2", hasImage: true, hasText: false, buttonCount: 2 },
+    M6: { name: "이미지 + 텍스트 + 버튼 1", hasImage: true, hasText: true, buttonCount: 1 },
+    M7: { name: "이미지 + 텍스트 + 버튼 2", hasImage: true, hasText: true, buttonCount: 2 },
+    M8: { name: "설문", hasImage: false, hasText: true, buttonCount: 0 }
+};
+
+// 표시형태별 기본 데이터 생성 함수
+const createDefaultData = (displayType, themeCode = null, templateCode = null) => {
+    const displayConfig = DISPLAY_TYPES[displayType];
+    if (!displayConfig) return null;
+
+    const selectedTheme = themeCode
+        ? displayConfig.themes.find(t => t.code === themeCode)
+        : displayConfig.themes[0];
+
+    if (!selectedTheme) return null;
+
+    const template = templateCode || selectedTheme.template;
+    const templateConfig = TEMPLATE_CONFIG[template];
+
+    const show = [];
+    if (templateConfig.hasImage) show.push("images");
+    if (templateConfig.hasText) show.push("msg");
+    if (templateConfig.buttonCount > 0) show.push("buttons");
+
+    const defaultImages = templateConfig.hasImage ? [{
+        seq: 1,
+        url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhFjJgDxmK9CVk3XxTiitDyZLIOKJvtZNLrg&s",
+        action: "L",
+        linkUrl: "http://www.naver.com",
+        linkOpt: "B"
+    }] : [];
+
+    const defaultButtons = [];
+    for (let i = 0; i < templateConfig.buttonCount; i++) {
+        defaultButtons.push({
+            seq: i + 1,
+            text: `버튼 ${i + 1}`,
+            linkUrl: "http://www.example.com",
+            linkOpt: "B"
+        });
+    }
+
+    return {
+        display: displayType,
+        theme: selectedTheme.code,
+        template: template,
+        show: show,
+        location: displayConfig.defaultLocation,
+        images: defaultImages,
         msg: {
-            title: "미리보기 제목",
-            text: "미리보기 내용입니다."
+            title: `${displayConfig.name} 테스트`,
+            text: `${selectedTheme.name} 스타일입니다.`
         },
         today: "Y",
-        buttons: []
+        buttons: defaultButtons
     };
-
-    // 소문자를 대문자로 변환
-    const upperDisplayType = displayType?.toUpperCase();
-
-    switch(upperDisplayType) {
-        case 'BAR':
-            return {
-                ...baseData,
-                display: "BAR",
-                theme: "T3",
-                template: "M3",
-                location: "TOP"
-            };
-        case 'BOX':
-            return {
-                ...baseData,
-                display: "BOX",
-                theme: "T1",
-                template: "M1",
-                location: "MID"
-            };
-        case 'STAR':
-            return {
-                ...baseData,
-                display: "STAR",
-                theme: "T9",
-                template: "M1",
-                location: "MID"
-            };
-        case 'SLIDE':
-            return {
-                ...baseData,
-                display: "SLIDE",
-                theme: "T11",
-                template: "M4",
-                location: "MID",
-                buttons: [{
-                    seq: 1,
-                    text: "",
-                    linkUrl: "",
-                    linkOpt: ""
-                }]
-            };
-        default:
-            console.log('⚠️ 알 수 없는 표시형태:', displayType);
-            return null;
-    }
 };
 
 const InAppModule = ({
@@ -112,146 +132,68 @@ const InAppModule = ({
                          initialData = null
                      }) => {
     // 참조들
-    const settingsRef = useRef();
     const previewIframeRef = useRef();
 
-    // 프리뷰 데이터와 검증 상태
-    const [previewData, setPreviewData] = useState(null);
-    const [isValidForSave, setIsValidForSave] = useState(false);
+    // 현재 선택된 타입과 미리보기 데이터
+    const [currentType, setCurrentType] = useState('BOX');
+    const [currentTheme, setCurrentTheme] = useState('T4');
+    const [previewData, setPreviewData] = useState(() => createDefaultData('BOX'));
+    const [useLocalVersion, setUseLocalVersion] = useState(false);
 
-    // 커스텀 훅 사용 (2단계 구조)
-    const { displayTypes, locations, loading, error } = useInAppData(config);
+    // 타입 변경 핸들러
+    const handleTypeChange = (type) => {
+        setCurrentType(type);
+        const defaultTheme = DISPLAY_TYPES[type].themes[0].code;
+        setCurrentTheme(defaultTheme);
+        const newData = createDefaultData(type, defaultTheme);
+        setPreviewData(newData);
+        console.log(`🔄 ${type}형으로 변경:`, newData);
+    };
 
-    const {
-        currentStep,
-        selections,
-        handleItemSelect,
-        handleNext,
-        handleBack,
-        setInitialData
-    } = useInAppSelections(onDataChange, loading);
+    // 테마 변경 핸들러
+    const handleThemeChange = (themeCode) => {
+        setCurrentTheme(themeCode);
+        const newData = createDefaultData(currentType, themeCode);
+        setPreviewData(newData);
+        console.log(`🎨 테마 변경 ${themeCode}:`, newData);
+    };
 
-    // 초기 데이터 설정
+    // 최초 로드
     useEffect(() => {
-        setInitialData(initialData);
-    }, [initialData, loading]);
+        const defaultData = createDefaultData('BOX');
+        console.log('🎨 최초 BOX 미리보기 데이터 설정:', defaultData);
+    }, []);
 
-    // 최초 mount 시 "BOX" 타입 기본 미리보기
-    useEffect(() => {
-        if (!selections.displayType && !previewData) {
-            const defaultData = getDefaultPreviewData("BAR");
-            setPreviewData(defaultData);
-            console.log('🎨 최초 BOX 미리보기 데이터 설정:', defaultData);
-        }
-        // 만약 displayTypes가 로딩된 뒤에 최초 세팅을 원하면, displayTypes 의존성도 추가
-    }, [selections.displayType, previewData]);
-
-
-    // 1단계에서 표시형태 선택시 즉시 미리보기 표시
-    useEffect(() => {
-        if (currentStep === 1 && selections.displayType) {
-            console.log('🔍 선택된 표시형태:', selections.displayType);
-            const defaultData = getDefaultPreviewData(selections.displayType);
-            setPreviewData(defaultData);
-            console.log('🎨 미리보기 데이터 설정:', defaultData);
-        }
-    }, [selections.displayType, currentStep]);
-
-    // 미리보기 데이터 전송 - 즉시 전송
+    // 미리보기 데이터 전송
     useEffect(() => {
         if (previewData && previewIframeRef.current?.contentWindow) {
             try {
                 previewIframeRef.current.contentWindow.postMessage({
                     type: 'show_preview',
-                    data: previewData
+                    data: previewData,
+                    useLocal: useLocalVersion
                 }, '*');
                 console.log('📤 미리보기 전송 완료:', previewData);
             } catch (error) {
                 console.error('미리보기 전송 실패:', error);
             }
         }
-    }, [previewData]);
+    }, [previewData, useLocalVersion]);
 
-    // iframe onLoad 이벤트 추가
+    // iframe onLoad 이벤트
     const handleIframeLoad = () => {
         console.log('📱 iframe 로드 완료');
-        // iframe이 로드되면 현재 previewData가 있으면 즉시 전송
         if (previewData) {
             try {
                 previewIframeRef.current.contentWindow.postMessage({
                     type: 'show_preview',
-                    data: previewData
+                    data: previewData,
+                    useLocal: useLocalVersion
                 }, '*');
                 console.log('📤 초기 미리보기 전송:', previewData);
             } catch (error) {
                 console.error('초기 미리보기 전송 실패:', error);
             }
-        }
-    };
-    const getHeaderIcon = () => {
-        switch(currentStep) {
-            case 1: return <DisplayIcon />;
-            case 2: return <ImageIcon />;
-            default: return <DisplayIcon />;
-        }
-    };
-
-    // UnifiedSettings에서 데이터 변경 시 호출
-    const handleSettingsDataChange = (jsonData) => {
-        // trim 오류 방지를 위해 필수 필드 검증
-        const validatedData = {
-            ...jsonData,
-            msg: {
-                title: jsonData.msg?.title || "",
-                text: jsonData.msg?.text || ""
-            },
-            buttons: jsonData.buttons?.map(btn => ({
-                ...btn,
-                text: btn.text || "",
-                linkUrl: btn.linkUrl || "",
-                linkOpt: btn.linkOpt || ""
-            })) || [],
-            images: jsonData.images?.map(img => ({
-                ...img,
-                url: img.url || "",
-                action: img.action || "",
-                linkUrl: img.linkUrl || "",
-                linkOpt: img.linkOpt || ""
-            })) || []
-        };
-
-        setPreviewData(validatedData);
-        console.log('📊 설정 데이터 변경:', validatedData);
-    };
-
-    // UnifiedSettings에서 검증 상태 변경 시 호출
-    const handleValidationChange = (isValid) => {
-        setIsValidForSave(isValid);
-        console.log('✅ 검증 상태:', isValid);
-    };
-
-    // 제출/저장 핸들러
-    const handleSubmit = () => {
-        if (currentStep === 2) {
-            // 설정 검증
-            if (settingsRef.current?.validateSettings()) {
-                const jsonData = settingsRef.current?.getJsonData();
-
-                console.log('✅ 설정 검증 성공');
-                console.log('📤 전송 데이터:', jsonData);
-
-                // qdx.showMsg 호출
-                InAppService.showTestMessage(jsonData).then(success => {
-                    if (success) {
-                        alert('인앱 메시지가 전체 화면에 표시되었습니다!');
-                    }
-                });
-            } else {
-                console.log('❌ 설정 검증 실패');
-                alert('입력되지 않은 필드가 있습니다. 빨간색으로 표시된 필드를 확인해주세요.');
-            }
-        } else {
-            handleNext();
         }
     };
 
@@ -264,96 +206,38 @@ const InAppModule = ({
         }
     };
 
-    // 메인 콘텐츠 렌더링 (2단계 구조)
-    const renderContent = () => {
-        if (currentStep === 2) {
-            return (
-                <UnifiedSettings
-                    ref={settingsRef}
-                    displayType={selections.displayType}
-                    onDataChange={handleSettingsDataChange}
-                    onValidationChange={handleValidationChange}
-                />
-            );
-        }
-
-        if (currentStep === 1) {
-            const items = getCurrentItems(currentStep, displayTypes, locations, selections);
-            return (
-                <SelectionGridComponent
-                    items={items}
-                    currentStep={currentStep}
-                    selections={selections}
-                    onItemSelect={handleItemSelect}
-                />
-            );
-        }
-
-        return null;
+    // 오늘하루 보지않기 토글
+    const handleTodayChange = (checked) => {
+        const updatedData = {
+            ...previewData,
+            today: checked ? 'Y' : 'N'
+        };
+        setPreviewData(updatedData);
     };
 
-    // 로딩 상태
-    if (loading) {
-        return (
-            <div className="qdx_adm_wrap">
-                <ModuleWrapper>
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '100%',
-                        gap: '20px'
-                    }}>
-                        {/* 회전하는 프로그레스 인디케이터 */}
-                        <div style={{
-                            width: '48px',
-                            height: '48px',
-                            justifyContent: 'center',
-                            border: '4px solid #e5e7eb',
-                            borderTop: '4px solid #3b82f6',
-                            borderRadius: '50%',
-                            animation: 'spin 1s linear infinite'
-                        }} />
-                        <p style={{ color: '#6b7280', fontSize: '16px' }}>데이터를 불러오는 중...</p>
-                        <style jsx>{`
-                            @keyframes spin {
-                                0% { transform: rotate(0deg); }
-                                100% { transform: rotate(360deg); }
-                            }
-                        `}</style>
-                    </div>
-                </ModuleWrapper>
-            </div>
-        );
-    }
-
-    // 메인 렌더링
     return (
         <div className="qdx_adm_wrap">
             <ModuleWrapper>
                 <ContentSection>
                     <Header>
                         <HeaderIcon>
-                            {getHeaderIcon()}
+                            <DisplayIcon />
                         </HeaderIcon>
                         <div style={{ flex: 1 }}>
                             <StepTitle>
-                                {getCurrentStepTitle(currentStep)}
+                                QDX 테스트 - {currentType}형 ({useLocalVersion ? '로컬' : 'CDN'})
                             </StepTitle>
-                            {currentStep === 2 && (
-                                <p style={{
-                                    color: '#6b7280',
-                                    fontSize: '14px',
-                                    margin: '4px 0 0 0',
-                                    fontWeight: '400'
-                                }}>
-                                    필요한 구성 요소를 선택하고 설정하세요.
-                                </p>
-                            )}
+                            <p style={{
+                                color: '#6b7280',
+                                fontSize: '14px',
+                                margin: '4px 0 0 0',
+                                fontWeight: '400'
+                            }}>
+                                {useLocalVersion ? 'CDN CSS + 로컬 JS' : '완전 CDN 버전'}
+                            </p>
                         </div>
                         <StepNumber>
-                            {getCurrentStepNumber(currentStep)}
+                            1/1
                         </StepNumber>
                     </Header>
 
@@ -362,34 +246,175 @@ const InAppModule = ({
                         overflowY: 'auto',
                         overflowX: 'hidden'
                     }}>
-                        {renderContent()}
-                    </ContentArea>
+                        <div style={{
+                            padding: '20px',
+                            background: 'white',
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0'
+                        }}>
+                            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#374151' }}>
+                                QDX 테스트 설정
+                            </h3>
 
-                    <NavigationArea>
-                        <BackButton onClick={handleBack} disabled={currentStep === 1}>
-                            <BackIcon />
-                        </BackButton>
+                            {/* 버전 선택 */}
+                            <div style={{ marginBottom: '20px' }}>
+                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#374151' }}>
+                                    버전 선택
+                                </h4>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button
+                                        onClick={() => setUseLocalVersion(false)}
+                                        style={{
+                                            padding: '8px 16px',
+                                            background: !useLocalVersion ? '#10b981' : '#f1f5f9',
+                                            color: !useLocalVersion ? 'white' : '#374151',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px'
+                                        }}
+                                    >
+                                        CDN 버전 (완전 작동)
+                                    </button>
+                                    <button
+                                        onClick={() => setUseLocalVersion(true)}
+                                        style={{
+                                            padding: '8px 16px',
+                                            background: useLocalVersion ? '#f59e0b' : '#f1f5f9',
+                                            color: useLocalVersion ? 'white' : '#374151',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px'
+                                        }}
+                                    >
+                                        로컬 JS + CDN CSS
+                                    </button>
+                                </div>
+                            </div>
 
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <NextButton
-                                onClick={handleSubmit}
-                                disabled={!isNextEnabled(currentStep, selections) || (currentStep === 2 && !isValidForSave)}
-                            >
-                                {currentStep === 2 ? (
-                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <path d="M20 6L9 17l-5-5"/>
-                                    </svg>
-                                ) : (
-                                    <NextIcon />
+                            {/* 타입 선택 버튼들 */}
+                            <div style={{
+                                display: 'flex',
+                                gap: '8px',
+                                marginBottom: '20px',
+                                flexWrap: 'wrap'
+                            }}>
+                                {Object.keys(DISPLAY_TYPES).map((type) => (
+                                    <button
+                                        key={type}
+                                        onClick={() => handleTypeChange(type)}
+                                        style={{
+                                            padding: '8px 16px',
+                                            background: currentType === type ? '#3b82f6' : '#f1f5f9',
+                                            color: currentType === type ? 'white' : '#374151',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px',
+                                            fontWeight: currentType === type ? '600' : '400'
+                                        }}
+                                    >
+                                        {DISPLAY_TYPES[type].name}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* 테마 선택 */}
+                            <div style={{ marginBottom: '20px' }}>
+                                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#374151' }}>
+                                    테마 선택
+                                </h4>
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '8px',
+                                    flexWrap: 'wrap'
+                                }}>
+                                    {DISPLAY_TYPES[currentType]?.themes.map((theme) => (
+                                        <button
+                                            key={theme.code}
+                                            onClick={() => handleThemeChange(theme.code)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                background: currentTheme === theme.code ? '#10b981' : '#ffffff',
+                                                color: currentTheme === theme.code ? 'white' : '#374151',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '12px',
+                                                fontWeight: currentTheme === theme.code ? '600' : '400'
+                                            }}
+                                        >
+                                            {theme.code}: {theme.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 선택된 타입 정보 */}
+                            <div style={{
+                                background: '#f8fafc',
+                                padding: '16px',
+                                borderRadius: '6px',
+                                marginBottom: '16px',
+                                border: '1px solid #e2e8f0'
+                            }}>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <strong>표시형태:</strong> {previewData.display}
+                                </div>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <strong>테마:</strong> {previewData.theme}
+                                </div>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <strong>템플릿:</strong> {previewData.template}
+                                </div>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <strong>위치:</strong> {previewData.location}
+                                </div>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <strong>표시 요소:</strong> {previewData.show.join(', ')}
+                                </div>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <strong>제목:</strong> {previewData.msg.title}
+                                </div>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <strong>내용:</strong> {previewData.msg.text}
+                                </div>
+
+                                {previewData.images && previewData.images.length > 0 && (
+                                    <div style={{ marginBottom: '8px' }}>
+                                        <strong>이미지 개수:</strong> {previewData.images.length}개
+                                    </div>
                                 )}
-                            </NextButton>
+
+                                {previewData.buttons && previewData.buttons.length > 0 && (
+                                    <div style={{ marginBottom: '8px' }}>
+                                        <strong>버튼:</strong> {previewData.buttons.map(btn => btn.text).join(', ')}
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={handleFullScreenPreview}
+                                style={{
+                                    padding: '10px 20px',
+                                    background: '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                전체화면 미리보기
+                            </button>
                         </div>
-                    </NavigationArea>
+                    </ContentArea>
                 </ContentSection>
 
-                {/* 미리보기 섹션 - PreviewArea 박스 없이 직접 표시 */}
+                {/* 미리보기 섹션 */}
                 <PreviewSection>
-                    {/* 헤더 - 항상 버튼 표시 */}
+                    {/* 헤더 */}
                     <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -410,20 +435,11 @@ const InAppModule = ({
                                 <input
                                     type="checkbox"
                                     checked={previewData?.today === 'Y'}
-                                    onChange={(e) => {
-                                        if (previewData) {
-                                            const updatedData = {
-                                                ...previewData,
-                                                today: e.target.checked ? 'Y' : 'N'
-                                            };
-                                            setPreviewData(updatedData);
-                                        }
-                                    }}
-                                    disabled={!previewData}
+                                    onChange={(e) => handleTodayChange(e.target.checked)}
                                     style={{
                                         width: '16px',
                                         height: '16px',
-                                        cursor: previewData ? 'pointer' : 'not-allowed'
+                                        cursor: 'pointer'
                                     }}
                                 />
                                 오늘하루 보지않기
@@ -432,15 +448,14 @@ const InAppModule = ({
                             {/* 전체화면 버튼 */}
                             <button
                                 onClick={handleFullScreenPreview}
-                                disabled={!previewData}
                                 style={{
                                     padding: '10px 10px',
-                                    background: previewData ? '#169DAF' : '#9ca3af',
+                                    background: '#169DAF',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '50%',
                                     fontSize: '14px',
-                                    cursor: previewData ? 'pointer' : 'not-allowed',
+                                    cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px',
@@ -456,7 +471,7 @@ const InAppModule = ({
                         </div>
                     </div>
 
-                    {/* QDX 미리보기 - PreviewSection에 직접 표시 */}
+                    {/* QDX 미리보기 */}
                     <iframe
                         ref={previewIframeRef}
                         onLoad={handleIframeLoad}
@@ -472,7 +487,11 @@ const InAppModule = ({
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>QDX Preview</title>
+    <title>QDX Test</title>
+    <!-- CDN CSS는 항상 로드 -->
+    <link rel="stylesheet" href="https://quadmax.co.kr/qdx/css/qdx.css">
+    <link rel="stylesheet" href="https://quadmax.co.kr/qdx/css/qdx-theme.css">
+    
     <style>
 #qdx_popup_wrap {
     position: fixed !important;
@@ -486,10 +505,6 @@ const InAppModule = ({
     overflow: auto !important;
 }
 
-#qdx_popup_wrap .qdx_close img {
-    filter: invert(100%) grayscale(100%) brightness(20%) !important;
-}
-
 #qdx_type_box,
 #qdx_type_slide {
     position: absolute !important;
@@ -499,8 +514,7 @@ const InAppModule = ({
     transform-origin: center center !important;
 }
 
-#qdx_type_bar,
- {
+#qdx_type_bar {
     position: absolute !important;
     top: 50% !important;
     left: 50% !important;
@@ -508,8 +522,12 @@ const InAppModule = ({
     transform-origin: center center !important;
 }
 
-#qdx_popup_wrap .qdx_close_box .qdx_close_today {
-color: #838383 !important;
+#qdx_type_star {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(0.7) !important;
+    transform-origin: center center !important;
 }
 
 .qdx_cont {
@@ -520,47 +538,87 @@ color: #838383 !important;
 </head>
 
 <body>
+    <!-- CDN JS는 기본으로 로드 -->
     <script src="https://quadmax.co.kr/qdx/qdx-renderer.js"></script>
+    
     <script>
+        let cdnQdx = null;
+        let localQdx = null;
         let qdxReady = false;
         let pendingPreview = null;
+        let useLocalVersion = false;
         
-        function initQdx() {
+        async function initQdx() {
             try {
+                // CDN QDX 초기화
                 if (window.qdx && typeof window.qdx.init === 'function') {
-                    qdx.init({
+                    await window.qdx.init({
                         "api_key": "8jaAWd0Zp7POcZYLWDBdCg==",
                         "cntnrId": "easycore",
                         "serverUrl": "https://quadmax.co.kr"
                     });
-                    qdxReady = true;
-                    console.log('✅ QDX 초기화 성공');
-                    
-                    // 대기중인 미리보기가 있으면 표시
-                    if (pendingPreview) {
-                        showPreview(pendingPreview);
-                        pendingPreview = null;
-                    }
+                    cdnQdx = window.qdx;
+                    console.log('✅ CDN QDX 초기화 완료');
                 } else {
-                    console.log('⏳ QDX 아직 로드 안됨, 재시도...');
+                    console.log('⏳ CDN QDX 로드 대기...');
                     setTimeout(initQdx, 100);
+                    return;
                 }
+                
+                // 로컬 QDX 로드 시도
+                await loadLocalQdx();
+                
             } catch (error) {
                 console.error('❌ QDX 초기화 실패:', error);
                 setTimeout(initQdx, 500);
             }
         }
         
-        function showPreview(data) {
+        async function loadLocalQdx() {
+            try {
+                const script = document.createElement('script');
+                script.src = '../src/assets/qdx-renderer.js.umd.cjs';
+                script.onload = () => {
+                    setTimeout(() => {
+                        if (window.QdxRenderer && window.QdxRenderer !== cdnQdx) {
+                            localQdx = window.QdxRenderer;
+                            console.log('✅ 로컬 QDX 로드 완료');
+                        }
+                        
+                        qdxReady = true;
+                        if (pendingPreview) {
+                            showPreview(pendingPreview.data, pendingPreview.useLocal);
+                            pendingPreview = null;
+                        }
+                    }, 100);
+                };
+                
+                script.onerror = () => {
+                    console.log('❌ 로컬 스크립트 로드 실패, CDN만 사용');
+                    qdxReady = true;
+                    if (pendingPreview) {
+                        showPreview(pendingPreview.data, false);
+                        pendingPreview = null;
+                    }
+                };
+                
+                document.head.appendChild(script);
+                
+            } catch (error) {
+                console.error('❌ 로컬 QDX 로드 실패:', error);
+                qdxReady = true;
+            }
+        }
+        
+        function showPreview(data, useLocal = false) {
             if (!data) {
                 console.log('데이터 없음');
                 return;
             }
             
-            // QDX가 준비되지 않았으면 대기
             if (!qdxReady) {
-                console.log('⏳ QDX 준비 중... 미리보기 대기');
-                pendingPreview = data;
+                console.log('⏳ QDX 준비 중...');
+                pendingPreview = { data, useLocal };
                 return;
             }
             
@@ -571,9 +629,12 @@ color: #838383 !important;
                     existingPopup.remove();
                 }
                 
-                console.log('📱 미리보기 표시:', data);
+                const qdxToUse = (useLocal && localQdx) ? localQdx : cdnQdx;
+                const version = (useLocal && localQdx) ? '로컬 JS' : 'CDN';
+                
+                console.log(\`📱 미리보기 표시 (\${version}):, data\`);
                 const messageId = 'PREVIEW_' + Date.now();
-                qdx.showMsg(messageId, data);
+                qdxToUse.showMsg(messageId, data);
                 
             } catch (error) {
                 console.error('❌ 미리보기 실패:', error);
@@ -583,18 +644,18 @@ color: #838383 !important;
         window.addEventListener('message', function (e) {
             if (e.data.type === 'show_preview' && e.data.data) {
                 console.log('📨 메시지 수신:', e.data.data);
-                showPreview(e.data.data);
+                showPreview(e.data.data, e.data.useLocal);
             }
         });
         
-        // 즉시 초기화 시작
+        // 초기화 시작
         initQdx();
     </script>
 </body>
 </html>
                         `}
-                        title="QDX Preview"
-                        sandbox="allow-scripts allow-same-origin allow-popups"
+                        title="QDX Test"
+                        sandbox="allow-scripts allow-same-origin"
                     />
                 </PreviewSection>
 
