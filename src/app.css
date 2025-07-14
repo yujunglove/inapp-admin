@@ -1,0 +1,52 @@
+/* App.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #ffffff;
+}
+
+.qdx_adm_wrap {
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+}
+
+/* 반응형 */
+@media screen and (max-width: 1280px) {
+  .qdx_adm_wrap > div {
+    flex-direction: column;
+  }
+
+  .qdx_adm_wrap > div > div:first-child {
+    width: 100% !important;
+    height: 60vh;
+  }
+
+  .qdx_adm_wrap > div > div:last-child {
+    width: 100% !important;
+    height: 40vh;
+    border-left: none;
+    border-top: 1px solid #e9e9e9;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .qdx_adm_wrap {
+    height: auto;
+    min-height: 100vh;
+  }
+}
