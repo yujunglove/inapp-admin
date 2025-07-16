@@ -4,10 +4,10 @@
 
 export const hardcodedData = {
     displayTypes: [
-        { code: 'bar', codeNm: '바형' },
-        { code: 'box', codeNm: '박스형' },
-        { code: 'star', codeNm: '별점형' },
-        { code: 'slide', codeNm: '슬라이드형' }
+        { code: 'bar', codeNm: 'BAR' },
+        { code: 'box', codeNm: 'BOX' },
+        { code: 'star', codeNm: 'STAR' },
+        { code: 'slide', codeNm: 'SLIDE' }
     ],
     templates: [
         { code: 'M1', codeNm: '이미지', val1: 'Y', val2: 'N', val3: '0' },
@@ -43,11 +43,4 @@ export const displayComponentMapping = {
         text: true,    // 별점형은 텍스트만
         button: false  // 별점형은 버튼 없음
     }
-};
-
-
-// 스텝 제목 매핑 (2단계로 축소)
-export const stepTitles = {
-    1: '표시형태 선택',
-    2: '상세 설정'  // 통합 설정 페이지
 };

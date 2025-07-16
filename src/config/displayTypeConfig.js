@@ -26,13 +26,11 @@ export const canToggleComponent = (displayType, componentType) => {
 export const displayComponentConfig = {
     BAR: {
         image: true,        // 바형은 이미지 가능
-        text: true,         // 텍스트 필수
+        text: true,         // 텍스트 가능
         button: false,      // 버튼 불가
         theme: 'T3',        // 바형 전용 테마
         defaultLocation: 'TOP',
-        forceEnabled: {     // 강제 활성화
-            text: true      // 바형은 텍스트 무조건 활성화
-        }
+        forceEnabled: {}    // 강제 활성화 제거 - 사용자가 선택할 수 있게
     },
     BOX: {
         image: true,        // 박스형은 이미지 가능
@@ -47,7 +45,7 @@ export const displayComponentConfig = {
         text: true,         // 텍스트 필수 (별점 + 텍스트)
         button: false,      // 버튼 없음
         theme: 'T9',        // 별점형 전용 테마
-        defaultLocation: 'MID',
+        defaultLocation: 'TOP',
         forceEnabled: {     // 강제 활성화
             text: true      // 별점형은 텍스트 무조건 활성화
         }
@@ -57,9 +55,9 @@ export const displayComponentConfig = {
         text: true,         // 텍스트 가능
         button: true,       // 버튼 가능
         theme: 'T11',       // 슬라이드형 전용 테마
-        defaultLocation: 'MID',
+        defaultLocation: 'TOP',
         forceEnabled: {     // 강제 활성화
-            image: true     // 슬라이드형은 이미지 무조건 활성화
+            image: false     // 슬라이드형은 이미지 무조건 활성화
         }
     }
 };

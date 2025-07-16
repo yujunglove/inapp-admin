@@ -59,18 +59,20 @@ export const HeaderIcon = styled.div.attrs({
 })`
     width: 40px;
     height: 40px;
-    background: #169DAF;
-    border-radius: 8px;
+    background: linear-gradient(120deg, #169DAF 65%, #3fd2f2 100%);
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;  /* 👈 이렇게 하면 currentColor가 흰색이 됨 */
+    color: #fff;
+    box-shadow: 0 2px 8px 0 rgba(22, 157, 175, 0.13);
 
     svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
     }
 `;
+
 
 export const StepTitle = styled.h2.attrs({
     className: 'step-title'
@@ -108,7 +110,6 @@ export const SelectionGrid = styled.div.withConfig({
   `}
 `;
 
-// active prop을 올바르게 처리하도록 수정
 export const SelectionItem = styled.div.withConfig({
     shouldForwardProp: (prop) => !['active', 'itemType'].includes(prop),
 }).attrs(props => ({
@@ -117,13 +118,17 @@ export const SelectionItem = styled.div.withConfig({
     text-align: center;
     cursor: pointer;
     transition: all 0.3s;
-    padding: 20px;
+    padding-bottom: 12px; /* 이미지 영역 아래 여백만 남김 */
     border-radius: 12px;
     border: 2px solid ${props => props.active ? 'rgba(22,157,175,0.65)' : '#e5e7eb'};
     background: ${props => props.active ? '#f8fafc' : '#f9fafb'};
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 이미지가 컨테이너를 벗어나지 않도록 */
 
     &:hover {
         border-color: rgba(22,157,175,0.65);
+        color: rgba(22,157,175,0.65);
         background: #f8fafc;
         transform: translateY(-2px);
         box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
@@ -134,22 +139,35 @@ export const ItemImage = styled.div.attrs({
     className: 'item-image'
 })`
     width: 100%;
-    height: 100px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    background: #e5e7eb;
+    height: 170px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    margin-bottom: 8px;
+    background: #e1e1e1;
 
     img {
-        max-width: 100%;
-        max-height: 100%;
+        width: 125%;
+        height: 125%;
         object-fit: contain;
     }
-`;
 
+    /* 슬라이드형 이미지에 대한 특별한 스타일 */
+
+    img[src*="slide-removebg-preview.png"] {
+        margin-top: 15px;
+        width: 125% !important;
+        height: 115% !important;
+    }
+
+    img[src*="star-removebg-preview.png"] {
+        width: 85% !important;
+        height: 85% !important;
+    }
+
+`;
+// ItemText 수정 - 여백 조정
 export const ItemText = styled.div.withConfig({
     shouldForwardProp: (prop) => prop !== 'active',
 }).attrs({
@@ -158,6 +176,7 @@ export const ItemText = styled.div.withConfig({
     font-size: 14px;
     font-weight: 500;
     color: ${props => props.active ? '#169DAF' : '#374151'};
+    padding: 0 15px; /* 좌우 여백 추가 */
 `;
 
 export const BackButton = styled.button.attrs({

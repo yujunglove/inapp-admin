@@ -13,21 +13,35 @@ import { ButtonSettings } from './settings/ButtonSettings';
 /**
  * 통합 설정 컴포넌트 - Next 버튼 클릭 시에만 검증
  */
-export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValidationChange }, ref) => {
+export const UnifiedSettings = forwardRef(({ 
+    displayType, 
+    onDataChange, 
+    onValidationChange, 
+    preservedSettings = {}, 
+    onSettingsPreserve 
+}, ref) => {
     console.log('🔧 UnifiedSettings - displayType:', displayType);
+    console.log('🔧 보존된 설정:', preservedSettings);
+
+    // displayType이 null이면 아무것도 렌더링하지 않음
+    if (!displayType) {
+        return null;
+    }
 
     // 표시형태별 설정 가져오기
     const displayConfig = getDisplayConfig(displayType);
     const activeComponents = getActiveComponents(displayType);
 
-    // 표시형태별 초기 설정
+    // 표시형태별 초기 설정 (보존된 설정과 병합)
     const initialSettings = createInitialSettings(displayType);
+    const mergedSettings = {
+        ...initialSettings,
+        ...preservedSettings, // 보존된 설정을 우선 적용
+        location: displayConfig.defaultLocation // 위치는 새 디스플레이 타입의 기본값 사용
+    };
 
     // 상태 관리
-    const [settings, setSettings] = useState({
-        ...initialSettings,
-        location: displayConfig.defaultLocation
-    });
+    const [settings, setSettings] = useState(mergedSettings);
 
     const [validationErrors, setValidationErrors] = useState({});
     const [urlValidation, setUrlValidation] = useState({
@@ -47,20 +61,40 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
     // 표시형태 변경 시 설정 재설정
     useEffect(() => {
         console.log('🔄 표시형태 변경:', displayType);
+        
+        // 🔥 현재 설정을 보존 (표시형태가 바뀌기 전 설정 저장)
+        if (onSettingsPreserve) {
+            const currentSettings = {
+                titleContent: settings.titleContent,
+                bodyContent: settings.bodyContent,
+                imageUrl: settings.imageUrl,
+                linkUrl: settings.linkUrl,
+                clickAction: settings.clickAction,
+                linkTarget: settings.linkTarget,
+                textEnabled: settings.textEnabled,
+                imageEnabled: settings.imageEnabled,
+                buttonEnabled: settings.buttonEnabled
+            };
+            onSettingsPreserve(currentSettings);
+        }
+        
         const newInitialSettings = createInitialSettings(displayType);
-        setSettings(prev => ({
+        const newMergedSettings = {
             ...newInitialSettings,
-            location: getDisplayConfig(displayType).defaultLocation,
-            // 사용자가 입력한 내용은 유지
-            titleContent: prev.titleContent,
-            bodyContent: prev.bodyContent,
-            imageUrl: prev.imageUrl,
-            linkUrl: prev.linkUrl
-        }));
+            ...preservedSettings, // 보존된 사용자 데이터 유지
+            location: getDisplayConfig(displayType).defaultLocation // 새 타입의 기본 위치
+        };
+        
+        console.log('🔄 새 설정:', newMergedSettings);
+        setSettings(newMergedSettings);
 
-        // 버튼 초기화
-        setButtons([]);
-        setNextButtonId(1);
+        // 버튼 초기화 (보존된 버튼이 있다면 유지)
+        if (preservedSettings.buttons && preservedSettings.buttons.length > 0) {
+            setButtons(preservedSettings.buttons);
+        } else {
+            setButtons([]);
+            setNextButtonId(1);
+        }
 
         // 표시형태 변경 시 검증 상태 초기화
         setHasValidationRun(false);
@@ -96,6 +130,13 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
 
     const handleInputChange = (field, value) => {
         setSettings(prev => ({ ...prev, [field]: value }));
+        
+        // 🔥 이미지 URL이 입력되면 자동으로 이미지 활성화
+        if (field === 'imageUrl' && value && !settings.imageEnabled) {
+            setSettings(prev => ({ ...prev, imageEnabled: true }));
+        }
+        
+        // 🔥 URL 입력 시 자동 검증
         if (field === 'imageUrl' || field === 'linkUrl') {
             checkUrlValidation(value, field);
         }
@@ -179,6 +220,38 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
     const generateJsonData = () => {
         console.log('📊 사용자 입력 기반 JSON 생성');
         const jsonData = generateInAppJsonData(displayType, settings, buttons);
+        
+        // 🔥 설정이 비활성화되어 있어도 기본 미리보기용 데이터는 유지
+        if (!settings.textEnabled && (!jsonData.msg.title && !jsonData.msg.text)) {
+            jsonData.msg = {
+                title: `${displayType?.toUpperCase()}형 미리보기`,
+                text: "이것은 미리보기 내용입니다."
+            };
+            // show 배열에 msg 추가 (미리보기용)
+            if (!jsonData.show.includes('msg')) {
+                jsonData.show.push('msg');
+            }
+        }
+        
+        // 🔥 텍스트가 활성화되어 있는데 제목이 비어있다면 기본 제목 추가
+        if (settings.textEnabled && !jsonData.msg.title && jsonData.msg.text) {
+            jsonData.msg.title = "제목을 입력하세요";
+        }
+        
+        if (!settings.imageEnabled && (!jsonData.images || jsonData.images.length === 0)) {
+            jsonData.images = [{
+                seq: 1,
+                url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhFjJgDxmK9CVk3XxTiitDyZLIOKJvtZNLrg&s",
+                action: "",
+                linkUrl: "",
+                linkOpt: ""
+            }];
+            // show 배열에 images 추가 (미리보기용)
+            if (!jsonData.show.includes('images')) {
+                jsonData.show.push('images');
+            }
+        }
+        
         const validation = validateJsonData(jsonData);
 
         if (!validation.isValid) {
@@ -228,6 +301,7 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
     // 데이터 변경 시 부모로 전달 (검증은 Next 버튼 눌렀을 때만)
     useEffect(() => {
         const jsonData = generateJsonData();
+        console.log('📊 UnifiedSettings JSON 생성:', jsonData);
 
         // JSON 데이터는 항상 전달
         if (onDataChange) onDataChange(jsonData);
@@ -248,7 +322,10 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
         getJsonData: generateJsonData,
         updateTodayOption: (checked) => {
             setSettings(prev => ({ ...prev, showTodayOption: checked }));
-        }
+        },
+        // 🔥 설정 데이터 제공 함수들 추가
+        getSettingsData: () => settings,
+        getButtonsData: () => buttons
     }));
 
     // 토글 가능 여부 계산
@@ -258,13 +335,6 @@ export const UnifiedSettings = forwardRef(({ displayType, onDataChange, onValida
 
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
-
-            {/* 위치 설정 */}
-            <LocationSettings
-                location={settings.location}
-                onChange={(value) => handleInputChange('location', value)}
-            />
-
             {/* 이미지 설정 */}
             {activeComponents.image && (
                 <ImageSettings

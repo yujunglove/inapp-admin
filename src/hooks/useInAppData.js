@@ -18,8 +18,6 @@ export const useInAppData = (config) => {
             try {
                 setLoading(true);
                 const data = await loadInAppData(apiConfig);
-
-                console.log('🔄 상태 업데이트 시작...');
                 setDisplayTypes(data.displayTypes);
                 setLocations(data.locations);
 
@@ -27,10 +25,8 @@ export const useInAppData = (config) => {
                 setError(err.message);
             } finally {
                 setLoading(false);
-                console.log('🏁 로딩 완료');
             }
         };
-
         fetchData();
     }, []);
 
@@ -56,7 +52,21 @@ export const useInAppSelections = (onDataChange, loading) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [selections, setSelections] = useState({
         displayType: null,
-        position: 'DEFAULT'  // 기본값으로 고정
+        position: 'TOP'  // 기본값 TOP으로 변경
+    });
+    
+    // 🔥 사용자 설정 보존을 위한 상태
+    const [preservedSettings, setPreservedSettings] = useState({
+        titleContent: '',
+        bodyContent: '',
+        imageUrl: '',
+        linkUrl: '',
+        clickAction: '',
+        linkTarget: 'current',
+        textEnabled: false,
+        imageEnabled: false,
+        buttonEnabled: false,
+        buttons: []
     });
 
     // 선택사항 변경 시 외부로 데이터 전달
@@ -75,11 +85,11 @@ export const useInAppSelections = (onDataChange, loading) => {
         console.log(`선택됨 - Step ${currentStep}:`, itemId);
 
         if (currentStep === 1) {
-            console.log('표시형태 선택:', itemId);
+            console.log('🔄 표시형태 변경:', selections.displayType, '->', itemId);
             setSelections({
                 ...selections,
                 displayType: itemId,
-                position: 'DEFAULT' // 기본 위치값 자동 설정
+                position: 'TOP' // 기본 위치값 자동 설정
             });
         }
     };
@@ -103,12 +113,11 @@ export const useInAppSelections = (onDataChange, loading) => {
         if (initialData && !loading) {
             setSelections({
                 displayType: initialData.display,
-                position: initialData.location || 'DEFAULT'
+                position: initialData.location || 'TOP'
             });
 
-            // 초기 데이터가 있으면 해당 단계로 이동
             if (initialData.display) {
-                setCurrentStep(2); // 표시형태가 이미 선택되어 있으면 2단계로
+                setCurrentStep(2);
             }
         }
     };
@@ -119,6 +128,8 @@ export const useInAppSelections = (onDataChange, loading) => {
         handleItemSelect,
         handleNext,
         handleBack,
-        setInitialData
+        setInitialData,
+        preservedSettings,
+        setPreservedSettings
     };
 };

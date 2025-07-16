@@ -1,27 +1,15 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import InAppModule from './InAppModule';
+import { createRoot } from 'react-dom/client';
+import InAppModule from './InAppModule.jsx';
+import './app.css';
 
-// 렌더 함수 export
-export const render = (containerId, config = {}) => {
-    const container = typeof containerId === 'string'
-        ? document.getElementById(containerId)
-        : containerId;
-
+export function render(containerId) {
+    const container = document.getElementById(containerId);
     if (!container) {
-        console.error(`Container '${containerId}' not found`);
-        return null;
+        console.error(`Container with id "${containerId}" not found`);
+        return;
     }
 
-    // React 18 방식
-    const root = ReactDOM.createRoot(container);
-    root.render(
-        <InAppModule
-            config={config}
-            onDataChange={config.onDataChange || (() => {})}
-            initialData={config.initialData || null}
-        />
-    );
-
-    return root;
-};
+    const root = createRoot(container);
+    root.render(<InAppModule />);
+}

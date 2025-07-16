@@ -9,7 +9,7 @@ export const ToggleBox = ({ checked, onChange, disabled = false }) => {
         display: 'inline-block',
         width: '50px',
         height: '24px',
-        background: checked ? '#1b9bd2' : '#e5e7eb',
+        background: checked ? '#3dbacb' : '#e1e1e1',
         borderRadius: '14px',
         border: 'none',
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -27,7 +27,7 @@ export const ToggleBox = ({ checked, onChange, disabled = false }) => {
         background: 'white',
         borderRadius: '50%',
         transition: 'left 0.3s ease',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        boxShadow: '0 3px 4px rgba(0,0,0,0.2)'
     };
 
     const textStyle = {
@@ -154,10 +154,11 @@ export const CustomSelect = ({ value, onChange, options, placeholder }) => {
                                 padding: '12px 16px',
                                 cursor: 'pointer',
                                 borderBottom: '1px solid #f3f4f6',
-                                hover: { background: '#f9fafb' }
+                                background: option.value === value ? '#e0f7fa' : 'white',
+                                fontWeight: option.value === value ? '600' : '400',
+                                color: option.value === value ? '#169DAF' : 'inherit',
+                                transition: 'all 0.2s ease'
                             }}
-                            onMouseEnter={(e) => e.target.style.background = '#f9fafb'}
-                            onMouseLeave={(e) => e.target.style.background = 'white'}
                         >
                             {option.label}
                         </div>

@@ -1,29 +1,43 @@
-// components/settings/ImageSettings.jsx - 슬라이드형 이미지 추가 기능
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ToggleBox, RadioButton, CustomSelect } from '../UIComponents';
+import { handleUrlCheck } from '../../utils/ValidationUtils';
 
 export const ImageSettings = ({
                                   settings,
                                   validationErrors,
                                   urlValidation,
                                   displayType,
-                                  canToggle,
+                                  canToggle = true,
                                   onToggle,
                                   onInputChange,
                                   onUrlValidation,
                                   showToast
                               }) => {
-    // 슬라이드형일 때 다중 이미지 관리
-    const [images, setImages] = useState([
-        { id: 1, url: '', action: '', linkUrl: '', linkTarget: 'current' }
-    ]);
-    const [nextImageId, setNextImageId] = useState(2);
-
+    const enabled = !!settings.imageEnabled;
     const isSlideType = displayType?.toUpperCase() === 'SLIDE';
-    const maxImages = isSlideType ? 5 : 1; // 슬라이드형은 최대 5개, 다른 타입은 1개
+    
+    // 슬라이드 타입에서 이미지 리스트 관리
+    const [images, setImages] = useState([]);
+    const [nextImageId, setNextImageId] = useState(1);
 
-    // 이미지 추가 (슬라이드형만)
+    // 기존 방식과의 호환성을 위한 초기화
+    useEffect(() => {
+        if (isSlideType && enabled && images.length === 0 && settings.imageUrl) {
+            // 기존 단일 이미지 URL이 있으면 첫 번째 이미지로 변환
+            setImages([{
+                id: 1,
+                url: settings.imageUrl,
+                action: settings.clickAction || '',
+                linkUrl: settings.linkUrl || '',
+                linkTarget: settings.linkTarget || 'current'
+            }]);
+            setNextImageId(2);
+        }
+    }, [isSlideType, enabled, settings.imageUrl]);
+
+    // 이미지 추가
     const addImage = () => {
-        if (images.length < maxImages) {
+        if (images.length < 5) {
             const newImage = {
                 id: nextImageId,
                 url: '',
@@ -36,386 +50,459 @@ export const ImageSettings = ({
         }
     };
 
-    // 이미지 삭제 (슬라이드형만, 최소 1개는 유지)
+    // 이미지 삭제
     const removeImage = (imageId) => {
-        if (images.length > 1) {
-            setImages(prev => prev.filter(img => img.id !== imageId));
-        }
+        setImages(prev => prev.filter(img => img.id !== imageId));
     };
 
-    // 이미지 정보 업데이트
+    // 이미지 업데이트
     const updateImage = (imageId, field, value) => {
-        setImages(prev => prev.map(img =>
+        setImages(prev => prev.map(img => 
             img.id === imageId ? { ...img, [field]: value } : img
         ));
 
-        // 첫 번째 이미지의 경우 기존 settings도 업데이트 (호환성)
-        if (imageId === images[0]?.id) {
-            if (field === 'url') {
-                onInputChange('imageUrl', value);
-            } else if (field === 'action') {
-                onInputChange('clickAction', value);
-            } else if (field === 'linkUrl') {
-                onInputChange('linkUrl', value);
-            } else if (field === 'linkTarget') {
-                onInputChange('linkTarget', value);
-            }
+        // URL 필드 변경 시 자동 검증
+        if (field === 'url') {
+            onUrlValidation(value, `image_${imageId}_url`);
+        } else if (field === 'linkUrl') {
+            onUrlValidation(value, `image_${imageId}_linkUrl`);
         }
     };
 
-    const handleUrlChange = (imageId, url) => {
-        updateImage(imageId, 'url', url);
-        onUrlValidation(url, 'imageUrl');
-    };
-
-    const handleLinkUrlChange = (imageId, url) => {
-        updateImage(imageId, 'linkUrl', url);
-        onUrlValidation(url, 'linkUrl');
-    };
+    // 슬라이드 타입에서 이미지 데이터 변경 시 부모에게 전달
+    useEffect(() => {
+        if (isSlideType && enabled) {
+            // 슬라이드용 이미지 배열을 부모에게 전달
+            onInputChange('images', images);
+        }
+    }, [images, isSlideType, enabled]);
 
     return (
         <div style={{
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            borderRadius: '12px',
-            padding: '24px',
-            marginBottom: '24px'
+            border: enabled ? '1px solid #169DAF33' : '1px solid #e5e7eb',
+            borderRadius: '18px',
+            boxShadow:  enabled
+                ? '0 1px 4px 0 rgba(22,157,175,0.18)'
+                : '0 1px 4px 0 rgba(181, 181, 181, 0.14)',
+            marginBottom: '32px',
+            background: 'white',
+            transition: 'box-shadow .18s cubic-bezier(.4,0,.2,1)'
         }}>
             <div style={{
+                background: enabled
+                    ? 'linear-gradient(30deg, #e4f5fa 0%, #c0e6ef 60%, #fafdff 100%)'
+                    : '#f3f6f8',
+                padding: '20px 28px 14px 28px',
+                borderRadius: '18px 18px 0px 0px',
+                borderBottom: enabled ? '1.5px solid #169DAF33' : '1px solid #e5e7eb',
                 display: 'flex',
-                alignItems: 'center',
                 justifyContent: 'space-between',
-                marginBottom: '20px'
+                alignItems: 'center'
             }}>
-                <h3 style={{
-                    margin: 0,
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    color: '#1f2937'
-                }}>
-                    이미지 설정
-                    {isSlideType && (
-                        <span style={{
-                            fontSize: '12px',
-                            color: '#6b7280',
-                            fontWeight: '400',
-                            marginLeft: '8px'
-                        }}>
-                            (최대 {maxImages}개)
-                        </span>
-                    )}
-                </h3>
-
-                {canToggle && (
-                    <label style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        cursor: 'pointer'
+                <div>
+                    <h4 style={{
+                        margin: 0,
+                        fontSize: '18px',
+                        fontWeight: 700,
+                        color: enabled ? '#0e636e' : '#8ba7b3',
+                        letterSpacing: '-0.5px',
+                        transition: 'color .18s'
                     }}>
-                        <input
-                            type="checkbox"
-                            checked={settings.imageEnabled}
-                            onChange={() => onToggle('imageEnabled')}
-                            style={{
-                                width: '20px',
-                                height: '20px',
-                                cursor: 'pointer'
-                            }}
-                        />
-                        <span style={{ fontSize: '14px', color: '#374151' }}>
-                            이미지 사용
-                        </span>
-                    </label>
+                        이미지 설정 {isSlideType && '(최대 5개)'}
+                    </h4>
+                    <p style={{
+                        margin: '7px 0 0 0',
+                        fontSize: '15px',
+                        color: enabled ? '#4a4e56' : '#b0b8c2',
+                        fontWeight: 400,
+                        opacity: enabled ? 0.92 : 0.72,
+                        transition: 'color .18s, opacity .18s'
+                    }}>
+                        {isSlideType ? '슬라이드로 표시할 이미지를 추가하고 설정합니다' : '이미지를 추가하고 설정합니다'}
+                    </p>
+                </div>
+                {canToggle && (
+                    <ToggleBox
+                        checked={enabled}
+                        onChange={() => onToggle('imageEnabled')}
+                    />
                 )}
             </div>
 
-            {settings.imageEnabled && (
-                <div>
-                    {/* 이미지 추가 버튼 (슬라이드형만) */}
-                    {isSlideType && images.length < maxImages && (
-                        <div style={{
-                            marginBottom: '16px',
-                            padding: '16px',
-                            border: '2px dashed #d1d5db',
-                            borderRadius: '8px',
-                            textAlign: 'center'
-                        }}>
-                            <button
-                                onClick={addImage}
-                                style={{
-                                    background: '#3b82f6',
-                                    color: 'white',
-                                    border: 'none',
-                                    padding: '10px 20px',
-                                    borderRadius: '6px',
-                                    fontSize: '14px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    margin: '0 auto'
-                                }}
-                            >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M12 5v14M5 12h14"/>
-                                </svg>
-                                이미지 추가 ({images.length}/{maxImages})
-                            </button>
-                        </div>
-                    )}
-
-                    {/* 이미지 목록 */}
-                    {(isSlideType ? images : [images[0] || { id: 1, url: settings.imageUrl || '', action: settings.clickAction || '', linkUrl: settings.linkUrl || '', linkTarget: settings.linkTarget || 'current' }]).map((image, index) => (
-                        <div
-                            key={image.id}
-                            style={{
-                                background: 'white',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '8px',
-                                padding: '20px',
-                                marginBottom: '16px',
-                                position: 'relative'
-                            }}
-                        >
-                            {/* 삭제 버튼 (슬라이드형, 2개 이상일 때만) */}
-                            {isSlideType && images.length > 1 && (
-                                <button
-                                    onClick={() => removeImage(image.id)}
-                                    style={{
-                                        position: 'absolute',
-                                        top: '12px',
-                                        right: '12px',
-                                        background: '#ef4444',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '50%',
-                                        width: '24px',
-                                        height: '24px',
-                                        cursor: 'pointer',
+            {enabled ? (
+                <div style={{ padding: '32px 28px 28px 28px', background: '#fff', borderRadius: '0 0 18px 18px' }}>
+                    {isSlideType ? (
+                        // 슬라이드 타입: 여러 이미지 지원
+                        <>
+                            {images.map((image, index) => (
+                                <div key={image.id} style={{
+                                    border: '1px solid #e5e7eb',
+                                    padding: '20px',
+                                    borderRadius: '8px',
+                                    marginBottom: '16px',
+                                    background: '#f9fafb',
+                                    position: 'relative'
+                                }}>
+                                    {/* - (삭제) 버튼 */}
+                                    {images.length > 1 && (
+                                        <button
+                                            onClick={() => removeImage(image.id)}
+                                            style={{
+                                                position: 'absolute',
+                                                top: '12px',
+                                                right: '12px',
+                                                width: '24px',
+                                                height: '24px',
+                                                borderRadius: '50%',
+                                                background: '#e5e7eb',
+                                                color: '#ef4444',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                fontSize: '18px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
+                                            title="이미지 삭제"
+                                        >-</button>
+                                    )}
+                                    <div style={{
                                         display: 'flex',
+                                        justifyContent: 'space-between',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '12px'
-                                    }}
-                                    title="이미지 삭제"
-                                >
-                                    ×
-                                </button>
-                            )}
+                                        marginBottom: '16px'
+                                    }}>
+                                        <h6 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#4a4e56' }}>
+                                            이미지 {index + 1}
+                                        </h6>
+                                    </div>
 
-                            {isSlideType && (
-                                <h4 style={{
-                                    margin: '0 0 16px 0',
-                                    fontSize: '16px',
-                                    fontWeight: '500',
-                                    color: '#374151'
-                                }}>
-                                    이미지 {index + 1}
-                                </h4>
-                            )}
+                                    {/* 이미지 URL */}
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                            <label style={{ fontWeight: '500', margin: 0, fontSize: '14px' }}>이미지 URL</label>
+                                            <button
+                                                onClick={() => {
+                                                    handleUrlCheck(image.url, showToast);
+                                                    onUrlValidation(image.url, `image_${image.id}_url`);
+                                                }}
+                                                style={{
+                                                    padding: '4px 8px',
+                                                    background: 'rgb(249, 250, 251)',
+                                                    color: 'rgb(107, 114, 128)',
+                                                    border: '1px solid rgb(229, 231, 235)',
+                                                    borderRadius: '4px',
+                                                    fontSize: '12px',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
+                                            </button>
+                                        </div>
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                value={image.url}
+                                                onChange={e => updateImage(image.id, 'url', e.target.value)}
+                                                placeholder="예) https://media.istockphoto.com/id/590153468/ko"
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '10px 12px',
+                                                    border: '1px solid #d1d5db',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px',
+                                                    boxSizing: 'border-box',
+                                                    paddingRight: urlValidation[`image_${image.id}_url`] ? '40px' : '12px'
+                                                }}
+                                            />
+                                            {urlValidation[`image_${image.id}_url`] && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    right: '12px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    color: '#10b981',
+                                                    fontSize: '16px'
+                                                }}>
+                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
 
+                                    {/* 클릭동작 */}
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>클릭동작</label>
+                                        <CustomSelect
+                                            value={image.action}
+                                            onChange={value => updateImage(image.id, 'action', value)}
+                                            options={[
+                                                { value: '', label: '없음' },
+                                                { value: 'link', label: '링크' }
+                                            ]}
+                                            placeholder="없음"
+                                        />
+                                    </div>
+
+                                    {/* 링크 설정 */}
+                                    {image.action === 'link' && (
+                                        <>
+                                            <div style={{ marginBottom: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                                    <label style={{ fontWeight: '500', margin: 0, fontSize: '14px' }}>링크 URL</label>
+                                                    <button
+                                                        onClick={() => {
+                                                            handleUrlCheck(image.linkUrl, showToast);
+                                                            onUrlValidation(image.linkUrl, `image_${image.id}_linkUrl`);
+                                                        }}
+                                                        style={{
+                                                            padding: '4px 8px',
+                                                            background: 'rgb(249, 250, 251)',
+                                                            color: 'rgb(107, 114, 128)',
+                                                            border: '1px solid rgb(229, 231, 235)',
+                                                            borderRadius: '4px',
+                                                            fontSize: '12px',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
+                                                    </button>
+                                                </div>
+                                                <div style={{ position: 'relative' }}>
+                                                    <input
+                                                        type="text"
+                                                        value={image.linkUrl}
+                                                        onChange={e => updateImage(image.id, 'linkUrl', e.target.value)}
+                                                        placeholder="예) https://www.example.com"
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '10px 12px',
+                                                            border: '1px solid #d1d5db',
+                                                            borderRadius: '6px',
+                                                            fontSize: '14px',
+                                                            boxSizing: 'border-box',
+                                                            paddingRight: urlValidation[`image_${image.id}_linkUrl`] ? '40px' : '12px'
+                                                        }}
+                                                    />
+                                                    {urlValidation[`image_${image.id}_linkUrl`] && (
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            right: '12px',
+                                                            top: '50%',
+                                                            transform: 'translateY(-50%)',
+                                                            color: '#10b981',
+                                                            fontSize: '16px'
+                                                        }}>
+                                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div style={{ marginBottom: '0' }}>
+                                                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>링크 열기</label>
+                                                <RadioButton
+                                                    options={[
+                                                        { value: 'current', label: '현재창' },
+                                                        { value: 'new', label: '새창' }
+                                                    ]}
+                                                    value={image.linkTarget}
+                                                    onChange={value => updateImage(image.id, 'linkTarget', value)}
+                                                    name={`linkTarget_${image.id}`}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* 이미지 추가 버튼 */}
+                            {images.length < 5 && (
+                                <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={addImage}
+                                        style={{
+                                            width: '34px',
+                                            height: '34px',
+                                            borderRadius: '50%',
+                                            border: '1px solid #e5e7eb',
+                                            background: '#f5f9fc',
+                                            color: '#169DAF',
+                                            fontSize: '22px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}
+                                        title="이미지 추가"
+                                    >+</button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        // 기존 타입: 단일 이미지
+                        <>
                             {/* 이미지 URL */}
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '6px',
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    color: '#374151'
-                                }}>
-                                    이미지 URL *
-                                </label>
+                            <div style={{ marginBottom: '18px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                    <label style={{ fontWeight: '500', margin: 0 }}>이미지 URL</label>
+                                    <button
+                                        onClick={() => {
+                                            handleUrlCheck(settings.imageUrl, showToast);
+                                            onUrlValidation(settings.imageUrl, 'imageUrl');
+                                        }}
+                                        style={{
+                                            padding: '4px 8px', background: 'rgb(249, 250, 251)', color: 'rgb(107, 114, 128)',
+                                            border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer'
+                                        }}
+                                    >
+                                        <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
+                                    </button>
+                                </div>
                                 <div style={{ position: 'relative' }}>
                                     <input
-                                        type="url"
-                                        value={image.url}
-                                        onChange={(e) => handleUrlChange(image.id, e.target.value)}
-                                        placeholder="https://example.com/image.jpg"
+                                        type="text"
+                                        value={settings.imageUrl || ''}
+                                        onChange={e => onInputChange('imageUrl', e.target.value)}
+                                        placeholder="예) https://media.istockphoto.com/id/590153468/ko"
                                         style={{
                                             width: '100%',
-                                            padding: '10px 40px 10px 12px',
-                                            border: validationErrors.imageUrl ? '2px solid #ef4444' : '1px solid #d1d5db',
-                                            borderRadius: '6px',
+                                            height: '44px',
+                                            padding: '12px 16px',
+                                            border: `1px solid ${validationErrors.imageUrl ? '#dc2626' : '#d1d5db'}`,
+                                            borderRadius: '8px',
                                             fontSize: '14px',
-                                            outline: 'none',
-                                            transition: 'border-color 0.2s ease'
+                                            background: validationErrors.imageUrl ? '#fef2f2' : 'white',
+                                            paddingRight: urlValidation.imageUrl ? '40px' : '16px',
+                                            boxSizing: 'border-box'
                                         }}
                                     />
-                                    {image.url && (
+                                    {urlValidation.imageUrl && (
                                         <div style={{
                                             position: 'absolute',
                                             right: '12px',
                                             top: '50%',
-                                            transform: 'translateY(-50%)'
+                                            transform: 'translateY(-50%)',
+                                            color: '#10b981',
+                                            fontSize: '16px'
                                         }}>
-                                            {urlValidation.imageUrl ? (
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
-                                                    <path d="M20 6L9 17l-5-5"/>
-                                                </svg>
-                                            ) : (
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
-                                                    <path d="M18 6L6 18M6 6l12 12"/>
-                                                </svg>
-                                            )}
+                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
                                         </div>
                                     )}
                                 </div>
                                 {validationErrors.imageUrl && (
-                                    <p style={{
-                                        color: '#ef4444',
-                                        fontSize: '12px',
-                                        margin: '4px 0 0 0'
-                                    }}>
+                                    <div style={{ color: '#dc2626', fontSize: '13px', marginTop: '4px' }}>
                                         {validationErrors.imageUrl}
-                                    </p>
+                                    </div>
                                 )}
                             </div>
 
-                            {/* 클릭 동작 */}
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '6px',
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    color: '#374151'
-                                }}>
-                                    클릭 동작
-                                </label>
-                                <select
-                                    value={image.action}
-                                    onChange={(e) => updateImage(image.id, 'action', e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        fontSize: '14px',
-                                        outline: 'none',
-                                        background: 'white',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <option value="">동작 없음</option>
-                                    <option value="link">링크로 이동</option>
-                                </select>
+                            {/* 클릭동작 */}
+                            <div style={{ marginBottom: '18px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>클릭동작</label>
+                                <CustomSelect
+                                    value={settings.clickAction || ''}
+                                    onChange={value => onInputChange('clickAction', value)}
+                                    options={[
+                                        { value: '', label: '없음' },
+                                        { value: 'link', label: '링크' }
+                                    ]}
+                                    placeholder="없음"
+                                />
                             </div>
 
-                            {/* 링크 URL (클릭 동작이 링크일 때만) */}
-                            {image.action === 'link' && (
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label style={{
-                                        display: 'block',
-                                        marginBottom: '6px',
-                                        fontSize: '14px',
-                                        fontWeight: '500',
-                                        color: '#374151'
-                                    }}>
-                                        링크 URL *
-                                    </label>
-                                    <div style={{ position: 'relative' }}>
-                                        <input
-                                            type="url"
-                                            value={image.linkUrl}
-                                            onChange={(e) => handleLinkUrlChange(image.id, e.target.value)}
-                                            placeholder="https://example.com"
-                                            style={{
-                                                width: '100%',
-                                                padding: '10px 40px 10px 12px',
-                                                border: validationErrors.linkUrl ? '2px solid #ef4444' : '1px solid #d1d5db',
-                                                borderRadius: '6px',
-                                                fontSize: '14px',
-                                                outline: 'none',
-                                                transition: 'border-color 0.2s ease'
-                                            }}
-                                        />
-                                        {image.linkUrl && (
-                                            <div style={{
-                                                position: 'absolute',
-                                                right: '12px',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)'
-                                            }}>
-                                                {urlValidation.linkUrl ? (
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
-                                                        <path d="M20 6L9 17l-5-5"/>
+                            {/* 링크 설정 */}
+                            {settings.clickAction === 'link' && (
+                                <>
+                                    <div style={{ marginBottom: '18px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <label style={{ fontWeight: '500', margin: 0 }}>링크 URL</label>
+                                            <button
+                                                onClick={() => {
+                                                    handleUrlCheck(settings.linkUrl, showToast);
+                                                    onUrlValidation(settings.linkUrl, 'linkUrl');
+                                                }}
+                                                style={{
+                                                    padding: '4px 8px', background: 'rgb(249, 250, 251)', color: 'rgb(107, 114, 128)',
+                                                    border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer'
+                                                }}
+                                            >
+                                                <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
+                                            </button>
+                                        </div>
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                value={settings.linkUrl || ''}
+                                                onChange={e => onInputChange('linkUrl', e.target.value)}
+                                                placeholder="예) https://www.example.com"
+                                                style={{
+                                                    width: '100%',
+                                                    height: '44px',
+                                                    padding: '12px 16px',
+                                                    border: `1px solid ${validationErrors.linkUrl ? '#dc2626' : '#d1d5db'}`,
+                                                    borderRadius: '8px',
+                                                    fontSize: '14px',
+                                                    background: validationErrors.linkUrl ? '#fef2f2' : 'white',
+                                                    paddingRight: urlValidation.linkUrl ? '40px' : '16px',
+                                                    boxSizing: 'border-box'
+                                                }}
+                                            />
+                                            {urlValidation.linkUrl && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    right: '12px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    color: '#10b981',
+                                                    fontSize: '16px'
+                                                }}>
+                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                     </svg>
-                                                ) : (
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
-                                                        <path d="M18 6L6 18M6 6l12 12"/>
-                                                    </svg>
-                                                )}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {validationErrors.linkUrl && (
+                                            <div style={{ color: '#dc2626', fontSize: '13px', marginTop: '4px' }}>
+                                                {validationErrors.linkUrl}
                                             </div>
                                         )}
                                     </div>
-                                    {validationErrors.linkUrl && (
-                                        <p style={{
-                                            color: '#ef4444',
-                                            fontSize: '12px',
-                                            margin: '4px 0 0 0'
-                                        }}>
-                                            {validationErrors.linkUrl}
-                                        </p>
-                                    )}
-                                </div>
+                                    <div style={{ marginBottom: '18px' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>링크 열기</label>
+                                        <RadioButton
+                                            options={[
+                                                { value: 'current', label: '현재창' },
+                                                { value: 'new', label: '새창' }
+                                            ]}
+                                            value={settings.linkTarget || 'current'}
+                                            onChange={value => onInputChange('linkTarget', value)}
+                                            name="linkTarget"
+                                        />
+                                    </div>
+                                </>
                             )}
-
-                            {/* 링크 타겟 (클릭 동작이 링크일 때만) */}
-                            {image.action === 'link' && (
-                                <div>
-                                    <label style={{
-                                        display: 'block',
-                                        marginBottom: '6px',
-                                        fontSize: '14px',
-                                        fontWeight: '500',
-                                        color: '#374151'
-                                    }}>
-                                        링크 열기 방식
-                                    </label>
-                                    <select
-                                        value={image.linkTarget}
-                                        onChange={(e) => updateImage(image.id, 'linkTarget', e.target.value)}
-                                        style={{
-                                            width: '100%',
-                                            padding: '10px 12px',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '6px',
-                                            fontSize: '14px',
-                                            outline: 'none',
-                                            background: 'white',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <option value="current">현재 창에서 열기</option>
-                                        <option value="new">새 창에서 열기</option>
-                                    </select>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-
-                    {isSlideType && images.length === 0 && (
-                        <div style={{
-                            textAlign: 'center',
-                            padding: '40px 20px',
-                            color: '#6b7280',
-                            fontSize: '14px'
-                        }}>
-                            이미지를 추가해주세요.
-                        </div>
+                        </>
                     )}
                 </div>
-            )}
-
-            {!settings.imageEnabled && (
+            ) : (
                 <div style={{
+                    padding: '36px 28px 36px 28px',
+                    background: '#f9fafb',
+                    borderRadius: '0 0 18px 18px',
                     textAlign: 'center',
-                    padding: '40px 20px',
-                    color: '#6b7280',
-                    fontSize: '14px'
+                    color: '#adbcc6',
+                    fontSize: '15px',
+                    fontWeight: 400,
+                    letterSpacing: '-0.2px'
                 }}>
-                    이미지를 사용하려면 위의 토글을 활성화해주세요.
+                    이미지 입력이 비활성화되어 있습니다.
                 </div>
             )}
         </div>

@@ -1,5 +1,19 @@
-// utils/jsonDataGenerator.js - 새로운 형식
 import { getDisplayConfig } from '../config/displayTypeConfig';
+
+// HTML 태그 제거 함수 (서버용 - 순수 텍스트만)
+function stripHtmlTags(html) {
+    if (!html) return '';
+    
+    // 브라우저 환경에서만 DOM 사용
+    if (typeof document !== 'undefined') {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        return tempDiv.textContent || tempDiv.innerText || '';
+    }
+    
+    // Node.js 환경이거나 document가 없는 경우 정규식 사용
+    return html.replace(/<[^>]*>/g, '').trim();
+}
 
 /**
  * 새로운 형식의 InApp JSON 데이터 생성
@@ -9,6 +23,12 @@ import { getDisplayConfig } from '../config/displayTypeConfig';
  * @returns {Object} JSON 데이터
  */
 export const generateInAppJsonData = (displayType, settings, buttons = []) => {
+    // displayType이 null이면 기본값 사용
+    if (!displayType) {
+        console.warn('⚠️ displayType이 null입니다. 기본값 BOX 사용');
+        displayType = 'BOX';
+    }
+    
     const config = getDisplayConfig(displayType);
 
     // show 배열 생성 - 활성화된 컴포넌트만 포함
@@ -29,48 +49,78 @@ export const generateInAppJsonData = (displayType, settings, buttons = []) => {
     // 기본 데이터 구조
     const jsonData = {
         display: displayType.toUpperCase(),
-        theme: config.theme,
         show: show,
         location: settings.location || config.defaultLocation || 'TOP'
     };
 
-    // 이미지 데이터 - 이미지가 활성화되고 URL이 있을 때만
-    if (settings.imageEnabled && settings.imageUrl) {
-        jsonData.images = [{
-            seq: 1,
-            url: settings.imageUrl,
-            action: settings.clickAction === 'link' ? 'L' : '',
-            linkUrl: settings.clickAction === 'link' ? (settings.linkUrl || '') : '',
-            linkOpt: settings.linkTarget === 'new' ? 'B' : 'S'
-        }];
+    // 이미지 데이터 - 허용되는 경우에만 추가
+    if (config.image) {
+        if (settings.imageEnabled) {
+            if (displayType.toUpperCase() === 'SLIDE' && settings.images && Array.isArray(settings.images)) {
+                // 슬라이드 타입: 여러 이미지 지원
+                jsonData.images = settings.images
+                    .filter(img => img.url && img.url.trim())
+                    .map((img, index) => ({
+                        seq: index + 1,
+                        url: img.url,
+                        action: img.action === 'link' ? 'L' : '',
+                        linkUrl: img.action === 'link' ? (img.linkUrl || '') : '',
+                        linkOpt: img.linkTarget === 'new' ? 'B' : 'S'
+                    }));
+            } else if (settings.imageUrl) {
+                // 기존 타입: 단일 이미지
+                jsonData.images = [{
+                    seq: 1,
+                    url: settings.imageUrl,
+                    action: settings.clickAction === 'link' ? 'L' : '',
+                    linkUrl: settings.clickAction === 'link' ? (settings.linkUrl || '') : '',
+                    linkOpt: settings.linkTarget === 'new' ? 'B' : 'S'
+                }];
+            } else {
+                jsonData.images = [];
+            }
+        } else {
+            jsonData.images = [];
+        }
     } else {
+        // 🔥 이미지를 지원하지 않는 타입은 빈 배열
         jsonData.images = [];
     }
 
-    // 메시지 데이터 - 텍스트가 활성화되었을 때
-    if (settings.textEnabled) {
-        jsonData.msg = {
-            title: settings.titleContent || '',
-            text: settings.bodyContent || ''
-        };
+    // 메시지 데이터 - 허용되는 경우에만 추가
+    if (config.text) {
+        if (settings.textEnabled) {
+            jsonData.msg = {
+                title: stripHtmlTags(settings.titleContent || ''),
+                text: stripHtmlTags(settings.bodyContent || '')
+            };
+        } else {
+            jsonData.msg = {};
+        }
     } else {
+        // 🔥 텍스트를 지원하지 않는 타입은 빈 객체
         jsonData.msg = {};
     }
 
     // 오늘하루 보지않기
     jsonData.today = settings.showTodayOption ? 'Y' : 'N';
 
-    // 버튼 데이터 - 버튼이 활성화되고 텍스트가 있는 버튼만
-    if (settings.buttonEnabled && config.button) {
-        jsonData.buttons = buttons
-            .filter(btn => btn.text && btn.text.trim())
-            .map((btn, index) => ({
-                seq: index + 1,
-                text: btn.text,
-                linkUrl: btn.url || '',
-                linkOpt: btn.target === 'new' ? 'B' : 'S'
-            }));
+    // 버튼 데이터 - 허용되는 경우에만 추가
+    if (config.button) {
+        if (settings.buttonEnabled) {
+            jsonData.buttons = buttons
+                .filter(btn => btn.text && btn.text.trim())
+                .map((btn, index) => ({
+                    seq: index + 1,
+                    text: btn.text,
+                    linkUrl: btn.url || '',
+                    linkOpt: btn.target === 'new' ? 'B' : 'S'
+                }));
+        } else {
+            jsonData.buttons = [];
+        }
     } else {
+        // 🔥 버튼을 지원하지 않는 타입은 빈 배열
         jsonData.buttons = [];
     }
 
@@ -88,10 +138,6 @@ export const validateJsonData = (jsonData) => {
     // 필수 필드 검증
     if (!jsonData.display) {
         errors.push('표시형태(display)가 없습니다.');
-    }
-
-    if (!jsonData.theme) {
-        errors.push('테마(theme)가 없습니다.');
     }
 
     if (!Array.isArray(jsonData.show)) {

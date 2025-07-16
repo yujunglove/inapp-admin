@@ -1,5 +1,3 @@
-// services/inAppService.js - 로컬 qdx-renderer 사용
-
 /**
  * qdx 로컬 파일 기반 InApp 서비스
  */

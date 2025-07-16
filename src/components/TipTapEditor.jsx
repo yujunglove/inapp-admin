@@ -1,4 +1,3 @@
-// components/TipTapEditor.jsx - 외부 onChange 지원 버전
 import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -217,12 +216,48 @@ const TipTapEditor = ({
                         }
                     }}
                     className="toolbar-select"
+                    style={{ minWidth: '75px'}}
                 >
                     <option value="">기본 폰트</option>
                     <option value="'Nanum Gothic', sans-serif">나눔고딕</option>
                     <option value="'Nanum Myeongjo', serif">나눔명조</option>
                     <option value="'Nanum Pen Script', cursive">나눔펜글씨</option>
                     <option value="'Nanum Brush Script', cursive">나눔붓글씨</option>
+                </select>
+
+                {/* 폰트 크기 */}
+                <select
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                    }}
+                    onChange={(e) => {
+                        const fontSize = e.target.value;
+                        if (fontSize === '') {
+                            // 기본 크기로 리셋
+                            editor.chain().focus().unsetMark('textStyle').run();
+                        } else {
+                            editor.chain().focus().setMark('textStyle', { fontSize: fontSize + 'px' }).run();
+                        }
+                    }}
+                    className="toolbar-select"
+                    style={{ minWidth: '50px', maginLeft: '5px'}}
+                    defaultValue="10"
+                >
+                    <option value="">크기</option>
+                    <option value="8">8px</option>
+                    <option value="9">9px</option>
+                    <option value="10">10px</option>
+                    <option value="11">11px</option>
+                    <option value="12">12px</option>
+                    <option value="14">14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                    <option value="20">20px</option>
+                    <option value="24">24px</option>
+                    <option value="28">28px</option>
+                    <option value="32">32px</option>
+                    <option value="36">36px</option>
+                    <option value="48">48px</option>
                 </select>
 
                 <div className="toolbar-divider"></div>
@@ -362,7 +397,6 @@ const TipTapEditor = ({
         .toolbar {
             display: flex;
             align-items: center;
-            gap: 1px;
             padding: 8px 12px;
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border-bottom: 1px solid #e2e8f0;

@@ -24,7 +24,7 @@ const SelectionGridComponent = ({
                     active={currentStep === 1 && selections.displayType === item.id}
                     onClick={() => onItemSelect(item.id)}
                 >
-                    <ItemImage>
+                    <ItemImage type={item.id}>
                         <img src={item.image} alt={item.name} />
                     </ItemImage>
                     <ItemText

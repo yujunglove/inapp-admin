@@ -1,9 +1,11 @@
 import { render } from './app.jsx';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import './styles/swiper-custom.css';
 
-// 전역 객체로 export
 window.QdxInapp = { render };
 
-// 모듈로도 export
 export { render };
 
 render('root');

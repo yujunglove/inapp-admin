@@ -1,15 +1,26 @@
 // utils/ValidationUtils.js - 리치텍스트 전용 검증
 
 /**
- * URL 유효성 검사 정규식
+ * URL 유효성 검사 정규식 - 더 관대한 검증
  */
-export const URL_REGEX = /^(https?:\/\/|www\.)([a-z0-9-\w]+\.)*[a-z0-9-]{1,}([\/a-z0-9-%#?&=\w\-]*)*(\.[\/a-z0-9-]{0,50}(\?[\/a-z0-9-%#?&=\w]+)*)*$/i;
+export const URL_REGEX = /^https?:\/\/.+/i;
 
 /**
  * URL 유효성 검사 함수
  */
 export const isValidUrl = (url) => {
-    return URL_REGEX.test(url);
+    if (!url || typeof url !== 'string') return false;
+    
+    // 기본 https:// 또는 http:// 검사
+    if (!URL_REGEX.test(url)) return false;
+    
+    try {
+        // URL 객체로 추가 검증
+        new URL(url);
+        return true;
+    } catch (e) {
+        return false;
+    }
 };
 
 /**
