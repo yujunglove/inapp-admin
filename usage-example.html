@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QDX InApp 사용 예시</title>
+</head>
+<body>
+    <div id="inapp-module-container"></div>
+
+    <!-- React 및 ReactDOM 스크립트 (외부 프로젝트에서 이미 로드되어 있다면 생략) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- QDX InApp 모듈 -->
+    <script src="dist/qdx-inapp.umd.js"></script>
+    
+    <script>
+        // 사용법
+        qdxInapp.showMsg('inapp-module-container', {
+            getInAppDisplayUrl: '/api/manage/system/commonCodeLikeList'
+        }, {
+            onDataChange: function(data) {
+                console.log('데이터 변경:', data);
+            },
+            onError: function(error) {
+                console.error('오류:', error);
+            },
+            onLoad: function() {
+                console.log('로드 완료');
+            }
+        });
+    </script>
+</body>
+</html>

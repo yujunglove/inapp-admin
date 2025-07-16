@@ -41,6 +41,8 @@ const THEME_MAPPING = {
 const InAppModule = ({
     config = {},
     onDataChange = () => {},
+    onError = () => {},
+    onLoad = () => {},
     initialData = null
 }) => {
     const settingsRef = useRef();
@@ -827,28 +829,24 @@ const InAppModule = ({
         let pendingPreview = null;
         
         function initLocalQdx() {
-            const script = document.createElement('script');
-            script.src = '../src/assets/qdx-renderer.js.umd.cjs';
-            script.onload = () => {
-                setTimeout(() => {
-                    if (window.QdxRenderer) {
-                        localQdx = window.QdxRenderer;
-                        localQdx.showMsg = (id, data) => {
-                            window.parent.postMessage({
-                                type: 'generate_popup_html',
-                                messageId: id,
-                                data: data
-                            }, '*');
-                        };
-                        qdxReady = true;
-                        if (pendingPreview) {
-                            showPreview(pendingPreview);
-                            pendingPreview = null;
-                        }
-                    }
-                }, 100);
+            // QdxRenderer를 인라인으로 정의
+            window.QdxRenderer = {
+                showMsg: (id, data) => {
+                    window.parent.postMessage({
+                        type: 'generate_popup_html',
+                        messageId: id,
+                        data: data
+                    }, '*');
+                }
             };
-            document.head.appendChild(script);
+            
+            localQdx = window.QdxRenderer;
+            qdxReady = true;
+            
+            if (pendingPreview) {
+                showPreview(pendingPreview);
+                pendingPreview = null;
+            }
         }
         
         function initSwiper(containerId) {

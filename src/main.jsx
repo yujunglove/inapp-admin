@@ -4,8 +4,27 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import './styles/swiper-custom.css';
 
-window.QdxInapp = { render };
+// showMsg 함수 정의
+function showMsg(containerId, config = {}, callbacks = {}) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.error(`Container with id "${containerId}" not found`);
+        return;
+    }
 
-export { render };
+    // React 컴포넌트를 렌더링하는 함수 호출
+    render(containerId, config, callbacks);
+}
 
-render('root');
+// window.qdxInapp 객체로 노출
+window.qdxInapp = {
+    showMsg: showMsg
+};
+
+// UMD 빌드를 위한 export
+export { showMsg };
+
+// 개발 환경에서 자동 실행 (옵션)
+if (import.meta.env.DEV) {
+    render('root');
+}
