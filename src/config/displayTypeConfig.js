@@ -46,9 +46,7 @@ export const displayComponentConfig = {
         button: false,      // 버튼 없음
         theme: 'T9',        // 별점형 전용 테마
         defaultLocation: 'TOP',
-        forceEnabled: {     // 강제 활성화
-            text: true      // 별점형은 텍스트 무조건 활성화
-        }
+        forceEnabled: {}    // 자유 선택
     },
     SLIDE: {
         image: true,        // 슬라이드형은 이미지 필수
@@ -56,9 +54,7 @@ export const displayComponentConfig = {
         button: true,       // 버튼 가능
         theme: 'T11',       // 슬라이드형 전용 테마
         defaultLocation: 'TOP',
-        forceEnabled: {     // 강제 활성화
-            image: false     // 슬라이드형은 이미지 무조건 활성화
-        }
+        forceEnabled: {}    // 자유 선택
     }
 };
 
@@ -123,12 +119,18 @@ export const getDefaultLocation = (displayType) => {
  */
 export const createInitialSettings = (displayType) => {
     const config = getDisplayConfig(displayType);
+    
+    console.log('🔧 createInitialSettings:', {
+        displayType,
+        config,
+        forceEnabled: config.forceEnabled
+    });
 
-    return {
-        // 강제 활성화 항목은 true, 나머지는 false로 시작
+    const initialSettings = {
+        // 🔥 강제 활성화 항목은 true, 나머지는 false로 시작
         imageEnabled: config.forceEnabled?.image || false,
         textEnabled: config.forceEnabled?.text || false,
-        buttonEnabled: false, // 버튼은 항상 기본 비활성화
+        buttonEnabled: config.forceEnabled?.button || false, // 버튼도 강제 활성화 지원
         location: config.defaultLocation,
         clickAction: '',
         imageUrl: '',
@@ -138,6 +140,9 @@ export const createInitialSettings = (displayType) => {
         bodyContent: '',
         showTodayOption: true // 기본적으로 true
     };
+    
+    console.log('🔧 생성된 초기 설정:', initialSettings);
+    return initialSettings;
 };
 
 /**

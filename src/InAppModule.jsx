@@ -142,7 +142,7 @@ const InAppModule = ({
     useEffect(() => {
         if (currentStep === 1 && selections.displayType) {
             // 🔥 1단계에서도 사용자 설정 기반 미리보기 표시
-            if (preservedSettings && (preservedSettings.titleContent || preservedSettings.bodyContent || preservedSettings.imageUrl)) {
+            if (preservedSettings && (preservedSettings.titleContent || preservedSettings.bodyContent || preservedSettings.imageUrl || preservedSettings.images || (preservedSettings.buttons && preservedSettings.buttons.length > 0))) {
                 // 보존된 설정이 있으면 그것을 기반으로 미리보기 생성
                 const userBasedData = {
                     display: selections.displayType.toLowerCase(),
@@ -157,14 +157,20 @@ const InAppModule = ({
                 };
 
                 // 이미지 설정
-                if (preservedSettings.imageUrl) {
-                    userBasedData.images = [{
-                        seq: 1,
-                        url: preservedSettings.imageUrl,
-                        action: preservedSettings.clickAction === 'link' ? 'L' : '',
-                        linkUrl: preservedSettings.linkUrl || '',
-                        linkOpt: preservedSettings.linkTarget === 'new' ? 'B' : 'S'
-                    }];
+                if (preservedSettings.imageUrl || preservedSettings.images) {
+                    if (selections.displayType.toUpperCase() === 'SLIDE' && preservedSettings.images) {
+                        // 🔥 슬라이드는 여러 이미지 지원
+                        userBasedData.images = preservedSettings.images;
+                    } else if (preservedSettings.imageUrl) {
+                        // 일반 타입은 단일 이미지
+                        userBasedData.images = [{
+                            seq: 1,
+                            url: preservedSettings.imageUrl,
+                            action: preservedSettings.clickAction === 'link' ? 'L' : '',
+                            linkUrl: preservedSettings.linkUrl || '',
+                            linkOpt: preservedSettings.linkTarget === 'new' ? 'B' : 'S'
+                        }];
+                    }
                     userBasedData.show.push('images');
                 }
 
@@ -193,13 +199,8 @@ const InAppModule = ({
                     }
                 }
 
-                // show 배열이 비어있으면 기본값 추가
-                if (userBasedData.show.length === 0) {
-                    const defaultData = createDefaultPreviewData(selections.displayType);
-                    setPreviewData(defaultData);
-                } else {
-                    setPreviewData(userBasedData);
-                }
+                // 최종 설정된 미리보기 표시
+                setPreviewData(userBasedData);
             } else {
                 // 보존된 설정이 없으면 기본 미리보기
                 const defaultData = createDefaultPreviewData(selections.displayType);
@@ -496,14 +497,20 @@ const InAppModule = ({
                 };
 
                 // 허용되는 컴포넌트만 추가
-                if (displayConfig.image && preservedSettings.imageUrl) {
-                    jsonForCopy.images = [{
-                        seq: 1,
-                        url: preservedSettings.imageUrl,
-                        action: preservedSettings.clickAction === 'link' ? 'L' : '',
-                        linkUrl: preservedSettings.clickAction === 'link' ? (preservedSettings.linkUrl || '') : '',
-                        linkOpt: preservedSettings.linkTarget === 'new' ? 'B' : 'S'
-                    }];
+                if (displayConfig.image && (preservedSettings.imageUrl || preservedSettings.images)) {
+                    if (selections.displayType.toUpperCase() === 'SLIDE' && preservedSettings.images) {
+                        // 🔥 슬라이드는 여러 이미지 지원
+                        jsonForCopy.images = preservedSettings.images;
+                    } else if (preservedSettings.imageUrl) {
+                        // 일반 타입은 단일 이미지
+                        jsonForCopy.images = [{
+                            seq: 1,
+                            url: preservedSettings.imageUrl,
+                            action: preservedSettings.clickAction === 'link' ? 'L' : '',
+                            linkUrl: preservedSettings.clickAction === 'link' ? (preservedSettings.linkUrl || '') : '',
+                            linkOpt: preservedSettings.linkTarget === 'new' ? 'B' : 'S'
+                        }];
+                    }
                     jsonForCopy.show.push('images');
                 } else {
                     jsonForCopy.images = [];
@@ -1334,14 +1341,20 @@ const InAppModule = ({
                                         };
 
                                         // 허용되는 컴포넌트만 추가
-                                        if (displayConfig.image && preservedSettings.imageUrl) {
-                                            jsonToShow.images = [{
-                                                seq: 1,
-                                                url: preservedSettings.imageUrl,
-                                                action: preservedSettings.clickAction === 'link' ? 'L' : '',
-                                                linkUrl: preservedSettings.clickAction === 'link' ? (preservedSettings.linkUrl || '') : '',
-                                                linkOpt: preservedSettings.linkTarget === 'new' ? 'B' : 'S'
-                                            }];
+                                        if (displayConfig.image && (preservedSettings.imageUrl || preservedSettings.images)) {
+                                            if (selections.displayType.toUpperCase() === 'SLIDE' && preservedSettings.images) {
+                                                // 🔥 슬라이드는 여러 이미지 지원
+                                                jsonToShow.images = preservedSettings.images;
+                                            } else if (preservedSettings.imageUrl) {
+                                                // 일반 타입은 단일 이미지
+                                                jsonToShow.images = [{
+                                                    seq: 1,
+                                                    url: preservedSettings.imageUrl,
+                                                    action: preservedSettings.clickAction === 'link' ? 'L' : '',
+                                                    linkUrl: preservedSettings.clickAction === 'link' ? (preservedSettings.linkUrl || '') : '',
+                                                    linkOpt: preservedSettings.linkTarget === 'new' ? 'B' : 'S'
+                                                }];
+                                            }
                                             jsonToShow.show.push('images');
                                         } else {
                                             jsonToShow.images = [];

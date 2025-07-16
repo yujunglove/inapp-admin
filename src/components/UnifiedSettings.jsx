@@ -63,7 +63,7 @@ export const UnifiedSettings = forwardRef(({
         console.log('🔄 표시형태 변경:', displayType);
         
         // 🔥 현재 설정을 보존 (표시형태가 바뀌기 전 설정 저장)
-        if (onSettingsPreserve) {
+        if (onSettingsPreserve && Object.keys(settings).length > 0) {
             const currentSettings = {
                 titleContent: settings.titleContent,
                 bodyContent: settings.bodyContent,
