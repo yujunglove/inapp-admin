@@ -117,22 +117,49 @@ export const SelectionItem = styled.div.withConfig({
 }))`
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s;
-    padding-bottom: 12px; /* 이미지 영역 아래 여백만 남김 */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding-bottom: 12px;
     border-radius: 12px;
     border: 2px solid ${props => props.active ? 'rgba(22,157,175,0.65)' : '#e5e7eb'};
     background: ${props => props.active ? '#f8fafc' : '#f9fafb'};
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* 이미지가 컨테이너를 벗어나지 않도록 */
+    overflow: hidden;
+    position: relative;
+
+    &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(22,157,175,0.1), transparent);
+        transition: left 0.6s ease;
+    }
 
     &:hover {
-        border-color: rgba(22,157,175,0.65);
-        color: rgba(22,157,175,0.65);
-        background: #f8fafc;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+        border-color: rgba(22,157,175,0.8);
+        color: rgba(22,157,175,0.8);
+        background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(22, 157, 175, 0.2);
     }
+
+    &:hover:before {
+        left: 100%;
+    }
+
+    &:active {
+        transform: translateY(-4px) scale(1.01);
+    }
+
+    ${props => props.active && `
+        &:hover {
+            transform: translateY(-6px) scale(1.03);
+            box-shadow: 0 25px 50px rgba(22, 157, 175, 0.3);
+        }
+    `}
 `;
 
 export const ItemImage = styled.div.attrs({
@@ -221,22 +248,53 @@ export const NextButton = styled.button.attrs({
     justify-content: center;
     width: 40px;
     height: 40px;
-    background: #6b7280;
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none !important;
     color: #ffffff;
+    position: relative;
+    overflow: hidden;
+
+    &:before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
 
     &:hover {
-        background: #4b5563;
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        transform: translateX(3px) scale(1.15) rotate(5deg);
+        box-shadow: 0 12px 30px rgba(107, 114, 128, 0.5);
+    }
+
+    &:hover:before {
+        width: 80px;
+        height: 80px;
+    }
+
+    &:active {
+        transform: translateX(2px) scale(1.1) rotate(3deg);
     }
 
     &:disabled {
         background: #d1d5db;
         cursor: not-allowed;
         transform: none;
+        box-shadow: none;
+    }
+
+    &:disabled:before {
+        display: none;
     }
 
     svg {
@@ -244,6 +302,12 @@ export const NextButton = styled.button.attrs({
         height: 17px;
         stroke: white;
         stroke-width: 2.5;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }
+
+    &:hover svg {
+        transform: translateX(2px) scale(1.1);
     }
 `;
 

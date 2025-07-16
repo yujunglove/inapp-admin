@@ -1,9 +1,5 @@
-/**
- * 현재 스텝에 따라 선택 가능한 항목들 반환 (노출위치 단계 제거)
- */
 export const getCurrentItems = (currentStep, displayTypes, locations, selections) => {
     if (currentStep === 1) {
-        // 이미지 경로 매핑 추가
         const displayTypeImages = {
             BAR: '/src/images/bar-removebg-preview.png',
             BOX: '/src/images/box-removebg-preview.png',
@@ -17,8 +13,6 @@ export const getCurrentItems = (currentStep, displayTypes, locations, selections
             image: displayTypeImages[item.code] || `/src/images/${item.code.toLowerCase()}-removebg-preview.png`
         }));
 
-        console.log('Step 1 - Display 항목들:', items);
-        console.log('실제 displayTypes 데이터:', displayTypes);
         return items;
     }
     return [];
@@ -36,6 +30,6 @@ export const getCurrentStepNumber = (currentStep) => {
 
 export const isNextEnabled = (currentStep, selections) => {
     if (currentStep === 1) return selections.displayType !== null;
-    if (currentStep === 2) return true; // 상세 설정은 항상 진행 가능
+    if (currentStep === 2) return true;
     return true;
 };

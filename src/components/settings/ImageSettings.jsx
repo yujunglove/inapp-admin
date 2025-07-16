@@ -3,39 +3,42 @@ import { ToggleBox, RadioButton, CustomSelect } from '../UIComponents';
 import { handleUrlCheck } from '../../utils/ValidationUtils';
 
 export const ImageSettings = ({
-                                  settings,
-                                  validationErrors,
-                                  urlValidation,
-                                  displayType,
-                                  canToggle = true,
-                                  onToggle,
-                                  onInputChange,
-                                  onUrlValidation,
-                                  showToast
-                              }) => {
+    settings,
+    validationErrors,
+    urlValidation,
+    displayType,
+    canToggle = true,
+    onToggle,
+    onInputChange,
+    onUrlValidation,
+    showToast,
+    onImagesChange
+}) => {
     const enabled = !!settings.imageEnabled;
     const isSlideType = displayType?.toUpperCase() === 'SLIDE';
     
-    // 슬라이드 타입에서 이미지 리스트 관리
     const [images, setImages] = useState([]);
     const [nextImageId, setNextImageId] = useState(1);
 
-    // 기존 방식과의 호환성을 위한 초기화
     useEffect(() => {
-        if (isSlideType && enabled && images.length === 0 && settings.imageUrl) {
-            // 기존 단일 이미지 URL이 있으면 첫 번째 이미지로 변환
-            setImages([{
-                id: 1,
-                url: settings.imageUrl,
-                action: settings.clickAction || '',
-                linkUrl: settings.linkUrl || '',
-                linkTarget: settings.linkTarget || 'current'
-            }]);
-            setNextImageId(2);
+        if (isSlideType && enabled) {
+            if (settings.images && Array.isArray(settings.images) && settings.images.length > 0) {
+                setImages(settings.images);
+                setNextImageId(settings.images.length + 1);
+            } 
+            else if (images.length === 0 && settings.imageUrl) {
+                setImages([{
+                    id: 1,
+                    url: settings.imageUrl,
+                    action: settings.clickAction || '',
+                    linkUrl: settings.linkUrl || '',
+                    linkTarget: settings.linkTarget || 'current'
+                }]);
+                setNextImageId(2);
+            }
         }
-    }, [isSlideType, enabled, settings.imageUrl]);
+    }, [isSlideType, enabled, settings.imageUrl, settings.images]);
 
-    // 이미지 추가
     const addImage = () => {
         if (images.length < 5) {
             const newImage = {
@@ -50,18 +53,15 @@ export const ImageSettings = ({
         }
     };
 
-    // 이미지 삭제
     const removeImage = (imageId) => {
         setImages(prev => prev.filter(img => img.id !== imageId));
     };
 
-    // 이미지 업데이트
     const updateImage = (imageId, field, value) => {
         setImages(prev => prev.map(img => 
             img.id === imageId ? { ...img, [field]: value } : img
         ));
 
-        // URL 필드 변경 시 자동 검증
         if (field === 'url') {
             onUrlValidation(value, `image_${imageId}_url`);
         } else if (field === 'linkUrl') {
@@ -69,11 +69,12 @@ export const ImageSettings = ({
         }
     };
 
-    // 슬라이드 타입에서 이미지 데이터 변경 시 부모에게 전달
     useEffect(() => {
         if (isSlideType && enabled) {
-            // 슬라이드용 이미지 배열을 부모에게 전달
             onInputChange('images', images);
+            if (onImagesChange) {
+                onImagesChange(images);
+            }
         }
     }, [images, isSlideType, enabled]);
 
@@ -81,7 +82,7 @@ export const ImageSettings = ({
         <div style={{
             border: enabled ? '1px solid #169DAF33' : '1px solid #e5e7eb',
             borderRadius: '18px',
-            boxShadow:  enabled
+            boxShadow: enabled
                 ? '0 1px 4px 0 rgba(22,157,175,0.18)'
                 : '0 1px 4px 0 rgba(181, 181, 181, 0.14)',
             marginBottom: '32px',
@@ -132,7 +133,6 @@ export const ImageSettings = ({
             {enabled ? (
                 <div style={{ padding: '32px 28px 28px 28px', background: '#fff', borderRadius: '0 0 18px 18px' }}>
                     {isSlideType ? (
-                        // 슬라이드 타입: 여러 이미지 지원
                         <>
                             {images.map((image, index) => (
                                 <div key={image.id} style={{
@@ -143,7 +143,6 @@ export const ImageSettings = ({
                                     background: '#f9fafb',
                                     position: 'relative'
                                 }}>
-                                    {/* - (삭제) 버튼 */}
                                     {images.length > 1 && (
                                         <button
                                             onClick={() => removeImage(image.id)}
@@ -178,7 +177,6 @@ export const ImageSettings = ({
                                         </h6>
                                     </div>
 
-                                    {/* 이미지 URL */}
                                     <div style={{ marginBottom: '12px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                                             <label style={{ fontWeight: '500', margin: 0, fontSize: '14px' }}>이미지 URL</label>
@@ -194,7 +192,19 @@ export const ImageSettings = ({
                                                     border: '1px solid rgb(229, 231, 235)',
                                                     borderRadius: '4px',
                                                     fontSize: '12px',
-                                                    cursor: 'pointer'
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                    transform: 'translateY(0)'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.background = '#e5e7eb';
+                                                    e.target.style.transform = 'translateY(-1px)';
+                                                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.background = 'rgb(249, 250, 251)';
+                                                    e.target.style.transform = 'translateY(0)';
+                                                    e.target.style.boxShadow = 'none';
                                                 }}
                                             >
                                                 <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -233,7 +243,6 @@ export const ImageSettings = ({
                                         </div>
                                     </div>
 
-                                    {/* 클릭동작 */}
                                     <div style={{ marginBottom: '12px' }}>
                                         <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>클릭동작</label>
                                         <CustomSelect
@@ -247,7 +256,6 @@ export const ImageSettings = ({
                                         />
                                     </div>
 
-                                    {/* 링크 설정 */}
                                     {image.action === 'link' && (
                                         <>
                                             <div style={{ marginBottom: '12px' }}>
@@ -265,7 +273,19 @@ export const ImageSettings = ({
                                                             border: '1px solid rgb(229, 231, 235)',
                                                             borderRadius: '4px',
                                                             fontSize: '12px',
-                                                            cursor: 'pointer'
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s ease',
+                                                            transform: 'translateY(0)'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.target.style.background = '#e5e7eb';
+                                                            e.target.style.transform = 'translateY(-1px)';
+                                                            e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.target.style.background = 'rgb(249, 250, 251)';
+                                                            e.target.style.transform = 'translateY(0)';
+                                                            e.target.style.boxShadow = 'none';
                                                         }}
                                                     >
                                                         <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -320,7 +340,6 @@ export const ImageSettings = ({
                                 </div>
                             ))}
 
-                            {/* 이미지 추가 버튼 */}
                             {images.length < 5 && (
                                 <div style={{ textAlign: 'center', marginTop: '12px' }}>
                                     <button
@@ -343,9 +362,7 @@ export const ImageSettings = ({
                             )}
                         </>
                     ) : (
-                        // 기존 타입: 단일 이미지
                         <>
-                            {/* 이미지 URL */}
                             <div style={{ marginBottom: '18px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                     <label style={{ fontWeight: '500', margin: 0 }}>이미지 URL</label>
@@ -356,7 +373,18 @@ export const ImageSettings = ({
                                         }}
                                         style={{
                                             padding: '4px 8px', background: 'rgb(249, 250, 251)', color: 'rgb(107, 114, 128)',
-                                            border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer'
+                                            border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer',
+                                            transition: 'all 0.2s ease', transform: 'translateY(0)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.background = '#e5e7eb';
+                                            e.target.style.transform = 'translateY(-1px)';
+                                            e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.background = 'rgb(249, 250, 251)';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
                                         }}
                                     >
                                         <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -402,7 +430,6 @@ export const ImageSettings = ({
                                 )}
                             </div>
 
-                            {/* 클릭동작 */}
                             <div style={{ marginBottom: '18px' }}>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>클릭동작</label>
                                 <CustomSelect
@@ -416,7 +443,6 @@ export const ImageSettings = ({
                                 />
                             </div>
 
-                            {/* 링크 설정 */}
                             {settings.clickAction === 'link' && (
                                 <>
                                     <div style={{ marginBottom: '18px' }}>
@@ -429,7 +455,18 @@ export const ImageSettings = ({
                                                 }}
                                                 style={{
                                                     padding: '4px 8px', background: 'rgb(249, 250, 251)', color: 'rgb(107, 114, 128)',
-                                                    border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer'
+                                                    border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer',
+                                                    transition: 'all 0.2s ease', transform: 'translateY(0)'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.background = '#e5e7eb';
+                                                    e.target.style.transform = 'translateY(-1px)';
+                                                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.background = 'rgb(249, 250, 251)';
+                                                    e.target.style.transform = 'translateY(0)';
+                                                    e.target.style.boxShadow = 'none';
                                                 }}
                                             >
                                                 <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>

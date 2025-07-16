@@ -2,22 +2,19 @@ import React from 'react';
 import { ToggleBox, RadioButton } from '../UIComponents';
 import { handleUrlCheck } from '../../utils/ValidationUtils';
 
-/**
- * 버튼 설정 컴포넌트 (최대 2개, 스타일 통일)
- */
 export const ButtonSettings = ({
-                                   settings,
-                                   buttons,
-                                   validationErrors,
-                                   urlValidation,
-                                   canToggle = true,
-                                   onToggle,
-                                   onUpdateButton,
-                                   onUrlValidation,
-                                   showToast,
-                                   onAddButton,
-                                   onRemoveButton
-                               }) => {
+    settings,
+    buttons,
+    validationErrors,
+    urlValidation,
+    canToggle = true,
+    onToggle,
+    onUpdateButton,
+    onUrlValidation,
+    showToast,
+    onAddButton,
+    onRemoveButton
+}) => {
     const maxButtons = 2;
     const canAdd = buttons.length < maxButtons;
     const canRemove = buttons.length > 1;
@@ -27,14 +24,13 @@ export const ButtonSettings = ({
         <div style={{
             border: enabled ? '1px solid #169DAF33' : '1px solid #e5e7eb',
             borderRadius: '18px',
-            boxShadow:  enabled
+            boxShadow: enabled
                 ? '0 1px 4px 0 rgba(22,157,175,0.18)'
                 : '0 1px 4px 0 rgba(181, 181, 181, 0.14)',
             marginBottom: '32px',
             background: 'white',
             transition: 'box-shadow .18s cubic-bezier(.4,0,.2,1)'
         }}>
-            {/* 헤더 */}
             <div style={{
                 background: enabled
                     ? 'linear-gradient(30deg, #e4f5fa 0%, #c0e6ef 60%, #fafdff 100%)'
@@ -78,7 +74,6 @@ export const ButtonSettings = ({
                     />
                 )}
             </div>
-            {/* 바디 */}
             {enabled ? (
                 <div style={{
                     padding: '32px 28px 28px 28px',
@@ -94,7 +89,6 @@ export const ButtonSettings = ({
                             background: '#f9fafb',
                             position: 'relative'
                         }}>
-                            {/* - (삭제) 버튼 */}
                             {canRemove && (
                                 <button
                                     onClick={() => onRemoveButton(button.id)}
@@ -128,7 +122,6 @@ export const ButtonSettings = ({
                                     버튼 {index + 1}
                                 </h6>
                             </div>
-                            {/* 버튼 텍스트 */}
                             <div style={{ marginBottom: '12px' }}>
                                 <label style={{
                                     display: 'block',
@@ -154,7 +147,6 @@ export const ButtonSettings = ({
                                     }}
                                 />
                             </div>
-                            {/* 링크 URL */}
                             <div style={{ marginBottom: '12px' }}>
                                 <div style={{
                                     display: 'flex',
@@ -175,7 +167,19 @@ export const ButtonSettings = ({
                                             border: '1px solid rgb(229, 231, 235)',
                                             borderRadius: '4px',
                                             fontSize: '12px',
-                                            cursor: 'pointer'
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            transform: 'translateY(0)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.background = '#e5e7eb';
+                                            e.target.style.transform = 'translateY(-1px)';
+                                            e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.background = 'rgb(249, 250, 251)';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
                                         }}
                                     >
                                         <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -214,7 +218,6 @@ export const ButtonSettings = ({
                                     )}
                                 </div>
                             </div>
-                            {/* 링크 열기 */}
                             <div>
                                 <label style={{
                                     display: 'block',
@@ -236,7 +239,6 @@ export const ButtonSettings = ({
                             </div>
                         </div>
                     ))}
-                    {/* + (추가) 버튼 */}
                     <div style={{ textAlign: 'center', marginTop: '12px' }}>
                         <button
                             type="button"
@@ -248,7 +250,7 @@ export const ButtonSettings = ({
                                 borderRadius: '50%',
                                 border: '1px solid #e5e7eb',
                                 background: canAdd ? '#f5f9fc' : '#f1f5f9',
-                                color:  canAdd ? '#169DAF' : '#c9c9c9',
+                                color: canAdd ? '#169DAF' : '#c9c9c9',
                                 fontSize: '22px',
                                 cursor: canAdd ? 'pointer' : 'not-allowed',
                                 fontWeight: 'bold'

@@ -1,7 +1,7 @@
 export const DB_MAPPING = {
     DISPLAY_TYPES: {
         BAR: {
-            defaultTheme: 'T3', // 이미지 + 텍스트형 (가장 기본)
+            defaultTheme: 'T3',
             defaultTemplate: 'M3',
             defaultLocation: 'TOP',
             hasImage: true,
@@ -9,7 +9,7 @@ export const DB_MAPPING = {
             buttonCount: 0
         },
         BOX: {
-            defaultTheme: 'T4', // 이미지형 (가장 기본)
+            defaultTheme: 'T4',
             defaultTemplate: 'M1',
             defaultLocation: 'TOP',
             hasImage: true,
@@ -17,7 +17,7 @@ export const DB_MAPPING = {
             buttonCount: 0
         },
         SLIDE: {
-            defaultTheme: 'T11', // 이미지형 + 버튼1 (기본)
+            defaultTheme: 'T11',
             defaultTemplate: 'M4',
             defaultLocation: 'TOP',
             hasImage: true,
@@ -25,7 +25,7 @@ export const DB_MAPPING = {
             buttonCount: 1
         },
         STAR: {
-            defaultTheme: 'T16', // 텍스트형 (유일)
+            defaultTheme: 'T16',
             defaultTemplate: 'M8',
             defaultLocation: 'TOP',
             hasImage: false,
@@ -35,24 +35,22 @@ export const DB_MAPPING = {
     },
 
     TEMPLATES: {
-        'M1': { hasImage: true, hasText: false, buttonCount: 0 }, // 이미지
-        'M2': { hasImage: false, hasText: true, buttonCount: 0 }, // 텍스트
-        'M3': { hasImage: true, hasText: true, buttonCount: 0 }, // 이미지 + 텍스트
-        'M4': { hasImage: true, hasText: false, buttonCount: 1 }, // 이미지 + 버튼1
-        'M5': { hasImage: true, hasText: false, buttonCount: 2 }, // 이미지 + 버튼2
-        'M6': { hasImage: true, hasText: true, buttonCount: 1 }, // 이미지 + 텍스트 + 버튼1
-        'M7': { hasImage: true, hasText: true, buttonCount: 2 }, // 이미지 + 텍스트 + 버튼2
-        'M8': { hasImage: false, hasText: true, buttonCount: 0 } // 설문(텍스트)
+        'M1': { hasImage: true, hasText: false, buttonCount: 0 },
+        'M2': { hasImage: false, hasText: true, buttonCount: 0 },
+        'M3': { hasImage: true, hasText: true, buttonCount: 0 },
+        'M4': { hasImage: true, hasText: false, buttonCount: 1 },
+        'M5': { hasImage: true, hasText: false, buttonCount: 2 },
+        'M6': { hasImage: true, hasText: true, buttonCount: 1 },
+        'M7': { hasImage: true, hasText: true, buttonCount: 2 },
+        'M8': { hasImage: false, hasText: true, buttonCount: 0 }
     }
 };
 
-// 기본 미리보기 데이터 생성 함수
 export const createDefaultPreviewData = (displayType) => {
     const upperDisplayType = displayType?.toUpperCase();
     const mapping = DB_MAPPING.DISPLAY_TYPES[upperDisplayType];
 
     if (!mapping) {
-        console.log('⚠️ 알 수 없는 표시형태:', displayType);
         return null;
     }
 
@@ -65,7 +63,6 @@ export const createDefaultPreviewData = (displayType) => {
         show: []
     };
 
-    // show 배열 생성
     if (mapping.hasImage) {
         baseData.show.push('images');
     }
@@ -80,7 +77,6 @@ export const createDefaultPreviewData = (displayType) => {
         }
     }
 
-    // 이미지 추가
     if (mapping.hasImage) {
         baseData.images = [{
             seq: 1,
@@ -93,7 +89,6 @@ export const createDefaultPreviewData = (displayType) => {
         baseData.images = [];
     }
 
-    // 텍스트 추가
     if (mapping.hasText) {
         baseData.msg = {
             title: `${upperDisplayType}형 미리보기`,
@@ -103,7 +98,6 @@ export const createDefaultPreviewData = (displayType) => {
         baseData.msg = {};
     }
 
-    // 버튼 추가
     if (mapping.buttonCount > 0) {
         baseData.buttons = [];
         for (let i = 1; i <= mapping.buttonCount; i++) {
@@ -117,8 +111,6 @@ export const createDefaultPreviewData = (displayType) => {
     } else {
         baseData.buttons = [];
     }
-
-    console.log('🏗️ 기본 미리보기 데이터 생성:', baseData);
 
     return baseData;
 };
