@@ -91,7 +91,11 @@ export const ButtonSettings = ({
                         }}>
                             {canRemove && (
                                 <button
-                                    onClick={() => onRemoveButton(button.id)}
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        onRemoveButton(button.id);
+                                    }}
                                     style={{
                                         position: 'absolute',
                                         top: '12px',
@@ -156,7 +160,9 @@ export const ButtonSettings = ({
                                 }}>
                                     <label style={{ fontSize: '14px', fontWeight: '500' }}>링크 URL</label>
                                     <button
-                                        onClick={() => {
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
                                             handleUrlCheck(button.url, showToast);
                                             onUrlValidation(button.url, 'url', button.id);
                                         }}
@@ -242,7 +248,10 @@ export const ButtonSettings = ({
                     <div style={{ textAlign: 'center', marginTop: '12px' }}>
                         <button
                             type="button"
-                            onClick={onAddButton}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                onAddButton();
+                            }}
                             disabled={!canAdd}
                             style={{
                                 width: '34px',

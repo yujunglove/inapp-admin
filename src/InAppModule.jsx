@@ -506,7 +506,11 @@ const InAppModule = ({
                 </label>
                 
                 <button
-                    onClick={() => setShowJsonModal(true)}
+                    type="button"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setShowJsonModal(true);
+                    }}
                     style={{
                         padding: '8px 16px',
                         background: '#fcad27',
@@ -536,8 +540,12 @@ const InAppModule = ({
                 
                 <div style={{ position: 'relative' }} data-location-menu>
                     <button
+                        type="button"
                         title="위치 설정"
-                        onClick={() => setShowLocationMenu(!showLocationMenu)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setShowLocationMenu(!showLocationMenu);
+                        }}
                         style={{
                             padding: '8px 16px',
                             background: '#169DAF',
@@ -589,8 +597,12 @@ const InAppModule = ({
                         }}>
                             {['TOP', 'MID', 'BOT'].map(location => (
                                 <button
+                                    type="button"
                                     key={location}
-                                    onClick={() => handleLocationChange(location)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleLocationChange(location);
+                                    }}
                                     style={{
                                         width: '100%',
                                         padding: '8px 12px',
@@ -1046,7 +1058,11 @@ const InAppModule = ({
                             </h3>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
-                                    onClick={handleCopyJson}
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleCopyJson();
+                                    }}
                                     style={{
                                         padding: '8px 16px',
                                         background: '#3b82f6',
@@ -1068,7 +1084,11 @@ const InAppModule = ({
                                     복사
                                 </button>
                                 <button
-                                    onClick={() => setShowJsonModal(false)}
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setShowJsonModal(false);
+                                    }}
                                     style={{
                                         background: 'none',
                                         border: 'none',

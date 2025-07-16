@@ -145,7 +145,11 @@ export const ImageSettings = ({
                                 }}>
                                     {images.length > 1 && (
                                         <button
-                                            onClick={() => removeImage(image.id)}
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                removeImage(image.id);
+                                            }}
                                             style={{
                                                 position: 'absolute',
                                                 top: '12px',
@@ -181,7 +185,9 @@ export const ImageSettings = ({
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                                             <label style={{ fontWeight: '500', margin: 0, fontSize: '14px' }}>이미지 URL</label>
                                             <button
-                                                onClick={() => {
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
                                                     handleUrlCheck(image.url, showToast);
                                                     onUrlValidation(image.url, `image_${image.id}_url`);
                                                 }}
@@ -366,11 +372,13 @@ export const ImageSettings = ({
                             <div style={{ marginBottom: '18px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                     <label style={{ fontWeight: '500', margin: 0 }}>이미지 URL</label>
-                                    <button
-                                        onClick={() => {
-                                            handleUrlCheck(settings.imageUrl, showToast);
-                                            onUrlValidation(settings.imageUrl, 'imageUrl');
-                                        }}
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleUrlCheck(settings.imageUrl, showToast);
+                                                            onUrlValidation(settings.imageUrl, 'imageUrl');
+                                                        }}
                                         style={{
                                             padding: '4px 8px', background: 'rgb(249, 250, 251)', color: 'rgb(107, 114, 128)',
                                             border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer',

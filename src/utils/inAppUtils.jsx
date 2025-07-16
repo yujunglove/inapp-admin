@@ -1,16 +1,27 @@
+// 이미지들을 import
+import barImage from '../images/bar-removebg-preview.png';
+import boxImage from '../images/box-removebg-preview.png';
+import slideImage from '../images/slide-removebg-preview.png';
+import starImage from '../images/star-removebg-preview.png';
+
 export const getCurrentItems = (currentStep, displayTypes, locations, selections) => {
     if (currentStep === 1) {
         const displayTypeImages = {
-            BAR: '/src/images/bar-removebg-preview.png',
-            BOX: '/src/images/box-removebg-preview.png',
-            SLIDE: '/src/images/slide-removebg-preview.png',
-            STAR: '/src/images/star-removebg-preview.png'
+            bar: barImage,
+            box: boxImage,
+            slide: slideImage,
+            star: starImage,
+            // 대문자 버전도 추가 (호환성을 위해)
+            BAR: barImage,
+            BOX: boxImage,
+            SLIDE: slideImage,
+            STAR: starImage
         };
 
         const items = displayTypes.map(item => ({
             id: item.code,
             name: item.codeNm,
-            image: displayTypeImages[item.code] || `/src/images/${item.code.toLowerCase()}-removebg-preview.png`
+            image: displayTypeImages[item.code] || boxImage // 기본 이미지
         }));
 
         return items;

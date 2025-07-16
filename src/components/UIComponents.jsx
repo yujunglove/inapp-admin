@@ -44,8 +44,12 @@ export const ToggleBox = ({ checked, onChange, disabled = false }) => {
 
     return (
         <button
+            type="button"
             style={toggleStyle}
-            onClick={disabled ? undefined : onChange}
+            onClick={disabled ? undefined : (e) => {
+                e.preventDefault();
+                onChange();
+            }}
             disabled={disabled}
         >
             <div style={sliderStyle}></div>
