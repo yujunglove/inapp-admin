@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ToggleBox, RadioButton, CustomSelect } from '../UIComponents';
 import { handleUrlCheck } from '../../utils/ValidationUtils';
+import { 
+  getCardStyle, 
+  getCardHeaderStyle, 
+  getCardTitleStyle, 
+  getCardDescriptionStyle, 
+  getCardContentStyle,
+  getInputStyle,
+  commonStyles,
+  CheckIcon
+} from '../../styles/commonStyles.jsx';
 
 export const ImageSettings = ({
     settings,
@@ -64,13 +74,11 @@ export const ImageSettings = ({
 
         if (field === 'url') {
             onUrlValidation(value, `image_${imageId}_url`);
-            // URL 에러 상태 지우기
             if (onInputChange) {
                 onInputChange('clearUrlError', { field: `image_${imageId}_url` });
             }
         } else if (field === 'linkUrl') {
             onUrlValidation(value, `image_${imageId}_linkUrl`);
-            // URL 에러 상태 지우기
             if (onInputChange) {
                 onInputChange('clearUrlError', { field: `image_${imageId}_linkUrl` });
             }
@@ -87,46 +95,13 @@ export const ImageSettings = ({
     }, [images, isSlideType, enabled]);
 
     return (
-        <div style={{
-            border: enabled ? '1px solid #169DAF33' : '1px solid #e5e7eb',
-            borderRadius: '18px',
-            boxShadow: enabled
-                ? '0 1px 4px 0 rgba(22,157,175,0.18)'
-                : '0 1px 4px 0 rgba(181, 181, 181, 0.14)',
-            marginBottom: '32px',
-            background: 'white',
-            transition: 'box-shadow .18s cubic-bezier(.4,0,.2,1)'
-        }}>
-            <div style={{
-                background: enabled
-                    ? 'linear-gradient(30deg, #e4f5fa 0%, #c0e6ef 60%, #fafdff 100%)'
-                    : '#f3f6f8',
-                padding: '20px 28px 14px 28px',
-                borderRadius: '18px 18px 0px 0px',
-                borderBottom: enabled ? '1.5px solid #169DAF33' : '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
+        <div style={getCardStyle(enabled)}>
+            <div style={getCardHeaderStyle(enabled)}>
                 <div>
-                    <h4 style={{
-                        margin: 0,
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color: enabled ? '#0e636e' : '#8ba7b3',
-                        letterSpacing: '-0.5px',
-                        transition: 'color .18s'
-                    }}>
+                    <h4 style={getCardTitleStyle(enabled)}>
                         이미지 설정 {isSlideType && '(최대 5개)'}
                     </h4>
-                    <p style={{
-                        margin: '7px 0 0 0',
-                        fontSize: '12px',
-                        color: enabled ? '#4a4e56' : '#b0b8c2',
-                        fontWeight: 400,
-                        opacity: enabled ? 0.92 : 0.72,
-                        transition: 'color .18s, opacity .18s'
-                    }}>
+                    <p style={getCardDescriptionStyle(enabled)}>
                         {isSlideType ? '슬라이드로 표시할 이미지를 추가하고 설정합니다' : '이미지를 추가하고 설정합니다'}
                     </p>
                 </div>
@@ -139,18 +114,11 @@ export const ImageSettings = ({
             </div>
 
             {enabled ? (
-                <div style={{ padding: '22px 18px 18px 18px', background: '#fff', borderRadius: '0 0 18px 18px' }}>
+                <div style={getCardContentStyle(enabled)}>
                     {isSlideType ? (
                         <>
                             {images.map((image, index) => (
-                                <div key={image.id} style={{
-                                    border: '1px solid #e5e7eb',
-                                    padding: '20px',
-                                    borderRadius: '8px',
-                                    marginBottom: '16px',
-                                    background: '#f9fafb',
-                                    position: 'relative'
-                                }}>
+                                <div key={image.id} style={commonStyles.itemBox.base}>
                                     {images.length > 1 && (
                                         <button
                                             type="button"
@@ -158,23 +126,7 @@ export const ImageSettings = ({
                                                 e.preventDefault();
                                                 removeImage(image.id);
                                             }}
-                                            style={{
-                                                position: 'absolute',
-                                                top: '12px',
-                                                right: '12px',
-                                                width: '24px',
-                                                height: '24px',
-                                                borderRadius: '50%',
-                                                background: '#e5e7eb',
-                                                color: '#ef4444',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                                fontSize: '18px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}
+                                            style={commonStyles.button.removeButton}
                                             title="이미지 삭제"
                                         >-</button>
                                     )}
@@ -191,7 +143,7 @@ export const ImageSettings = ({
 
                                     <div style={{ marginBottom: '12px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                            <label style={{ fontWeight: '500', margin: 0, fontSize: '12px' }}>이미지 URL</label>
+                                            <label style={commonStyles.label.base}>이미지 URL</label>
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
@@ -199,26 +151,12 @@ export const ImageSettings = ({
                                                     handleUrlCheck(image.url, (message) => showToast(message, e));
                                                     onUrlValidation(image.url, `image_${image.id}_url`);
                                                 }}
-                                                style={{
-                                                    padding: '4px 8px',
-                                                    background: 'rgb(249, 250, 251)',
-                                                    color: 'rgb(107, 114, 128)',
-                                                    border: '1px solid rgb(229, 231, 235)',
-                                                    borderRadius: '4px',
-                                                    fontSize: '12px',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s ease',
-                                                    transform: 'translateY(0)'
-                                                }}
+                                                style={commonStyles.button.base}
                                                 onMouseEnter={(e) => {
-                                                    e.target.style.background = '#e5e7eb';
-                                                    e.target.style.transform = 'translateY(-1px)';
-                                                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                                    Object.assign(e.target.style, commonStyles.button.hover);
                                                 }}
                                                 onMouseLeave={(e) => {
-                                                    e.target.style.background = 'rgb(249, 250, 251)';
-                                                    e.target.style.transform = 'translateY(0)';
-                                                    e.target.style.boxShadow = 'none';
+                                                    Object.assign(e.target.style, commonStyles.button.base);
                                                 }}
                                             >
                                                 <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -230,36 +168,21 @@ export const ImageSettings = ({
                                                 value={image.url}
                                                 onChange={e => updateImage(image.id, 'url', e.target.value)}
                                                 placeholder="예) https://media.istockphoto.com/id/590153468/ko"
-                                                style={{
-                                                    width: '100%',
-                                                    padding: '10px 12px',
-                                                    border: `1px solid ${urlValidation.errors?.[`image_${image.id}_url`] ? '#dc2626' : '#d1d5db'}`,
-                                                    borderRadius: '6px',
-                                                    fontSize: '14px',
-                                                    boxSizing: 'border-box',
-                                                    paddingRight: urlValidation[`image_${image.id}_url`] ? '40px' : '12px',
-                                                    background: urlValidation.errors?.[`image_${image.id}_url`] ? '#fef2f2' : 'white'
-                                                }}
+                                                style={getInputStyle(
+                                                    urlValidation.errors?.[`image_${image.id}_url`],
+                                                    urlValidation[`image_${image.id}_url`]
+                                                )}
                                             />
                                             {urlValidation[`image_${image.id}_url`] && (
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    right: '12px',
-                                                    top: '50%',
-                                                    transform: 'translateY(-50%)',
-                                                    color: '#10b981',
-                                                    fontSize: '16px'
-                                                }}>
-                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                    </svg>
+                                                <div style={commonStyles.checkIcon.container}>
+                                                    <CheckIcon />
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
                                     <div style={{ marginBottom: '12px' }}>
-                                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '12px' }}>클릭동작</label>
+                                        <label style={commonStyles.label.base}>클릭동작</label>
                                         <CustomSelect
                                             value={image.action}
                                             onChange={value => updateImage(image.id, 'action', value)}
@@ -275,32 +198,20 @@ export const ImageSettings = ({
                                         <>
                                             <div style={{ marginBottom: '12px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                                    <label style={{ fontWeight: '500', margin: 0, fontSize: '14px' }}>링크 URL</label>
+                                                    <label style={{ ...commonStyles.label.base, fontSize: '14px' }}>링크 URL</label>
                                                     <button
+                                                        type="button"
                                                         onClick={(e) => {
+                                                            e.preventDefault();
                                                             handleUrlCheck(image.linkUrl, (message) => showToast(message, e));
                                                             onUrlValidation(image.linkUrl, `image_${image.id}_linkUrl`);
                                                         }}
-                                                        style={{
-                                                            padding: '4px 8px',
-                                                            background: 'rgb(249, 250, 251)',
-                                                            color: 'rgb(107, 114, 128)',
-                                                            border: '1px solid rgb(229, 231, 235)',
-                                                            borderRadius: '4px',
-                                                            fontSize: '12px',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s ease',
-                                                            transform: 'translateY(0)'
-                                                        }}
+                                                        style={commonStyles.button.base}
                                                         onMouseEnter={(e) => {
-                                                            e.target.style.background = '#e5e7eb';
-                                                            e.target.style.transform = 'translateY(-1px)';
-                                                            e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                                            Object.assign(e.target.style, commonStyles.button.hover);
                                                         }}
                                                         onMouseLeave={(e) => {
-                                                            e.target.style.background = 'rgb(249, 250, 251)';
-                                                            e.target.style.transform = 'translateY(0)';
-                                                            e.target.style.boxShadow = 'none';
+                                                            Object.assign(e.target.style, commonStyles.button.base);
                                                         }}
                                                     >
                                                         <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -312,35 +223,20 @@ export const ImageSettings = ({
                                                         value={image.linkUrl}
                                                         onChange={e => updateImage(image.id, 'linkUrl', e.target.value)}
                                                         placeholder="예) https://www.example.com"
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '10px 12px',
-                                                            border: `1px solid ${urlValidation.errors?.[`image_${image.id}_linkUrl`] ? '#dc2626' : '#d1d5db'}`,
-                                                            borderRadius: '6px',
-                                                            fontSize: '14px',
-                                                            boxSizing: 'border-box',
-                                                            paddingRight: urlValidation[`image_${image.id}_linkUrl`] ? '40px' : '12px',
-                                                            background: urlValidation.errors?.[`image_${image.id}_linkUrl`] ? '#fef2f2' : 'white'
-                                                        }}
+                                                        style={getInputStyle(
+                                                            urlValidation.errors?.[`image_${image.id}_linkUrl`],
+                                                            urlValidation[`image_${image.id}_linkUrl`]
+                                                        )}
                                                     />
                                                     {urlValidation[`image_${image.id}_linkUrl`] && (
-                                                        <div style={{
-                                                            position: 'absolute',
-                                                            right: '12px',
-                                                            top: '50%',
-                                                            transform: 'translateY(-50%)',
-                                                            color: '#10b981',
-                                                            fontSize: '16px'
-                                                        }}>
-                                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                            </svg>
+                                                        <div style={commonStyles.checkIcon.container}>
+                                                            <CheckIcon />
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
                                             <div style={{ marginBottom: '0' }}>
-                                                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>링크 열기</label>
+                                                <label style={{ ...commonStyles.label.base, fontSize: '14px' }}>링크 열기</label>
                                                 <RadioButton
                                                     options={[
                                                         { value: 'current', label: '현재창' },
@@ -361,17 +257,7 @@ export const ImageSettings = ({
                                     <button
                                         type="button"
                                         onClick={addImage}
-                                        style={{
-                                            width: '34px',
-                                            height: '34px',
-                                            borderRadius: '50%',
-                                            border: '1px solid #e5e7eb',
-                                            background: '#f5f9fc',
-                                            color: '#169DAF',
-                                            fontSize: '22px',
-                                            cursor: 'pointer',
-                                            fontWeight: 'bold'
-                                        }}
+                                        style={commonStyles.button.addButton}
                                         title="이미지 추가"
                                     >+</button>
                                 </div>
@@ -382,27 +268,19 @@ export const ImageSettings = ({
                             <div style={{ marginBottom: '18px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                     <label style={{ fontWeight: '500', margin: 0 }}>이미지 URL</label>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            handleUrlCheck(settings.imageUrl, (message) => showToast(message, e));
-                                                            onUrlValidation(settings.imageUrl, 'imageUrl');
-                                                        }}
-                                        style={{
-                                            padding: '4px 8px', background: 'rgb(249, 250, 251)', color: 'rgb(107, 114, 128)',
-                                            border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer',
-                                            transition: 'all 0.2s ease', transform: 'translateY(0)'
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleUrlCheck(settings.imageUrl, (message) => showToast(message, e));
+                                            onUrlValidation(settings.imageUrl, 'imageUrl');
                                         }}
+                                        style={commonStyles.button.base}
                                         onMouseEnter={(e) => {
-                                            e.target.style.background = '#e5e7eb';
-                                            e.target.style.transform = 'translateY(-1px)';
-                                            e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                            Object.assign(e.target.style, commonStyles.button.hover);
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.target.style.background = 'rgb(249, 250, 251)';
-                                            e.target.style.transform = 'translateY(0)';
-                                            e.target.style.boxShadow = 'none';
+                                            Object.assign(e.target.style, commonStyles.button.base);
                                         }}
                                     >
                                         <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -415,29 +293,18 @@ export const ImageSettings = ({
                                         onChange={e => onInputChange('imageUrl', e.target.value)}
                                         placeholder="예) https://media.istockphoto.com/id/590153468/ko"
                                         style={{
-                                            width: '100%',
+                                            ...getInputStyle(
+                                                validationErrors.imageUrl || urlValidation.errors?.imageUrl,
+                                                urlValidation.imageUrl
+                                            ),
                                             height: '44px',
                                             padding: '12px 16px',
-                                            border: `1px solid ${validationErrors.imageUrl || urlValidation.errors?.imageUrl ? '#dc2626' : '#d1d5db'}`,
-                                            borderRadius: '8px',
-                                            fontSize: '14px',
-                                            background: (validationErrors.imageUrl || urlValidation.errors?.imageUrl) ? '#fef2f2' : 'white',
-                                            paddingRight: urlValidation.imageUrl ? '40px' : '16px',
-                                            boxSizing: 'border-box'
+                                            borderRadius: '8px'
                                         }}
                                     />
                                     {urlValidation.imageUrl && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            right: '12px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            color: '#10b981',
-                                            fontSize: '16px'
-                                        }}>
-                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
+                                        <div style={commonStyles.checkIcon.container}>
+                                            <CheckIcon />
                                         </div>
                                     )}
                                 </div>
@@ -467,24 +334,18 @@ export const ImageSettings = ({
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                             <label style={{ fontWeight: '500', margin: 0 }}>링크 URL</label>
                                             <button
+                                                type="button"
                                                 onClick={(e) => {
+                                                    e.preventDefault();
                                                     handleUrlCheck(settings.linkUrl, (message) => showToast(message, e));
                                                     onUrlValidation(settings.linkUrl, 'linkUrl');
                                                 }}
-                                                style={{
-                                                    padding: '4px 8px', background: 'rgb(249, 250, 251)', color: 'rgb(107, 114, 128)',
-                                                    border: '1px solid rgb(229, 231, 235)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer',
-                                                    transition: 'all 0.2s ease', transform: 'translateY(0)'
-                                                }}
+                                                style={commonStyles.button.base}
                                                 onMouseEnter={(e) => {
-                                                    e.target.style.background = '#e5e7eb';
-                                                    e.target.style.transform = 'translateY(-1px)';
-                                                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                                    Object.assign(e.target.style, commonStyles.button.hover);
                                                 }}
                                                 onMouseLeave={(e) => {
-                                                    e.target.style.background = 'rgb(249, 250, 251)';
-                                                    e.target.style.transform = 'translateY(0)';
-                                                    e.target.style.boxShadow = 'none';
+                                                    Object.assign(e.target.style, commonStyles.button.base);
                                                 }}
                                             >
                                                 <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -497,29 +358,18 @@ export const ImageSettings = ({
                                                 onChange={e => onInputChange('linkUrl', e.target.value)}
                                                 placeholder="예) https://www.example.com"
                                                 style={{
-                                                    width: '100%',
+                                                    ...getInputStyle(
+                                                        validationErrors.linkUrl || urlValidation.errors?.linkUrl,
+                                                        urlValidation.linkUrl
+                                                    ),
                                                     height: '44px',
                                                     padding: '12px 16px',
-                                                    border: `1px solid ${validationErrors.linkUrl || urlValidation.errors?.linkUrl ? '#dc2626' : '#d1d5db'}`,
-                                                    borderRadius: '8px',
-                                                    fontSize: '14px',
-                                                    background: (validationErrors.linkUrl || urlValidation.errors?.linkUrl) ? '#fef2f2' : 'white',
-                                                    paddingRight: urlValidation.linkUrl ? '40px' : '16px',
-                                                    boxSizing: 'border-box'
+                                                    borderRadius: '8px'
                                                 }}
                                             />
                                             {urlValidation.linkUrl && (
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    right: '12px',
-                                                    top: '50%',
-                                                    transform: 'translateY(-50%)',
-                                                    color: '#10b981',
-                                                    fontSize: '16px'
-                                                }}>
-                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                    </svg>
+                                                <div style={commonStyles.checkIcon.container}>
+                                                    <CheckIcon />
                                                 </div>
                                             )}
                                         </div>
@@ -547,16 +397,7 @@ export const ImageSettings = ({
                     )}
                 </div>
             ) : (
-                <div style={{
-                    padding: '36px 28px 36px 28px',
-                    background: '#f9fafb',
-                    borderRadius: '0 0 18px 18px',
-                    textAlign: 'center',
-                    color: '#adbcc6',
-                    fontSize: '12px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.2px'
-                }}>
+                <div style={getCardContentStyle(enabled)}>
                     이미지 입력이 비활성화되어 있습니다.
                 </div>
             )}

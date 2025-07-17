@@ -1,4 +1,4 @@
-import { hardcodedData } from '../constants/inAppConstants';
+import { HARDCODED_DATA } from '../config/appConfig';
 
 export const createApiConfig = (config) => {
     return {
@@ -19,10 +19,10 @@ export const loadInAppData = async (apiConfig) => {
     try {
         if (!hasValidApiUrls(apiConfig)) {
             return {
-                displayTypes: hardcodedData.displayTypes,
-                themes: hardcodedData.themes,
-                locations: hardcodedData.locations,
-                templates: hardcodedData.templates
+                displayTypes: HARDCODED_DATA.displayTypes,
+                themes: [],
+                locations: HARDCODED_DATA.locations,
+                templates: []
             };
         }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { loadInAppData, createApiConfig } from '../services/inAppApi';
+import { HARDCODED_DATA } from '../config/appConfig';
 
 export const useInAppData = (config) => {
     const [displayTypes, setDisplayTypes] = useState([]);
@@ -14,9 +15,20 @@ export const useInAppData = (config) => {
             try {
                 setLoading(true);
                 const data = await loadInAppData(apiConfig);
-                setDisplayTypes(data.displayTypes);
-                setLocations(data.locations);
+                
+                // 데이터가 없으면 하드코딩된 데이터 사용
+                if (!data.displayTypes || data.displayTypes.length === 0) {
+                    setDisplayTypes(HARDCODED_DATA.displayTypes);
+                    setLocations(HARDCODED_DATA.locations);
+                } else {
+                    setDisplayTypes(data.displayTypes);
+                    setLocations(data.locations || HARDCODED_DATA.locations);
+                }
             } catch (err) {
+                // 에러 발생 시 하드코딩된 데이터 사용
+                console.error('Failed to load data:', err);
+                setDisplayTypes(HARDCODED_DATA.displayTypes);
+                setLocations(HARDCODED_DATA.locations);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -50,7 +62,8 @@ export const useInAppSelections = (onDataChange, loading) => {
         textEnabled: false,
         imageEnabled: false,
         buttonEnabled: false,
-        buttons: []
+        buttons: [],
+        images: []
     });
 
     useEffect(() => {

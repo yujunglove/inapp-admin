@@ -1,11 +1,12 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { validateSettings, clearFieldError } from '../utils/ValidationUtils';
-import { getDisplayConfig, getActiveComponents, createInitialSettings, canToggleComponent } from '../config/displayTypeConfig';
+import { getDisplayConfig, getActiveComponents, createInitialSettings, canToggleComponent } from '../config/appConfig';
 import { generateInAppJsonData, validateJsonData } from '../utils/jsonDataGenerator';
 import { LocationSettings } from './settings/LocationSettings';
 import { ImageSettings } from './settings/ImageSettings';
 import { TextSettings } from './settings/TextSettings';
 import { ButtonSettings } from './settings/ButtonSettings';
+import { commonStyles } from '../styles/commonStyles.jsx';
 
 export const UnifiedSettings = forwardRef(({ 
     displayType, 
@@ -564,36 +565,15 @@ export const UnifiedSettings = forwardRef(({
 
             {toast.show && (
                 <div style={{
+                    ...commonStyles.toast.base,
                     position: toast.position.fixed ? 'fixed' : 'absolute',
                     top: toast.position.top + 'px',
                     left: toast.position.left !== undefined ? toast.position.left + 'px' : 'auto',
-                    right: toast.position.right !== 'auto' ? toast.position.right + 'px' : 'auto',
-                    background: '#333',
-                    color: 'white',
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    zIndex: 9999, // 매우 높은 z-index로 설정
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                    maxWidth: '200px',
-                    wordWrap: 'break-word',
-                    pointerEvents: 'none',
-                    whiteSpace: 'nowrap'
+                    right: toast.position.right !== 'auto' ? toast.position.right + 'px' : 'auto'
                 }}>
                     {toast.message}
                     {/* 말풍선 꼬리 */}
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '-6px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: 0,
-                        height: 0,
-                        borderLeft: '6px solid transparent',
-                        borderRight: '6px solid transparent',
-                        borderTop: '6px solid #333'
-                    }} />
+                    <div style={commonStyles.toast.arrow} />
                 </div>
             )}
         </div>

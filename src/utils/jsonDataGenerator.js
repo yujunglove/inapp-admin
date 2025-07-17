@@ -1,4 +1,4 @@
-import { getDisplayConfig } from '../config/displayTypeConfig';
+import { getDisplayConfig } from '../config/appConfig';
 
 function stripHtmlTags(html) {
     if (!html) return '';
@@ -21,25 +21,25 @@ export const generateInAppJsonData = (displayType, settings, buttons = []) => {
 
     const show = [];
 
-    if (settings.imageEnabled && config.image) {
+    if (settings.imageEnabled && config.components.image) {
         show.push('images');
     }
 
-    if (settings.textEnabled && config.text) {
+    if (settings.textEnabled && config.components.text) {
         show.push('msg');
     }
 
-    if (settings.buttonEnabled && config.button && buttons.some(btn => btn.text.trim())) {
+    if (settings.buttonEnabled && config.components.button && buttons.some(btn => btn.text.trim())) {
         show.push('buttons');
     }
 
     const jsonData = {
         display: displayType.toUpperCase(),
         show: show,
-        location: settings.location || config.defaultLocation || 'TOP'
+        location: settings.location || config.location || 'TOP'
     };
 
-    if (config.image) {
+    if (config.components.image) {
         if (settings.imageEnabled) {
             if (displayType.toUpperCase() === 'SLIDE' && settings.images && Array.isArray(settings.images)) {
                 jsonData.images = settings.images
@@ -69,11 +69,11 @@ export const generateInAppJsonData = (displayType, settings, buttons = []) => {
         jsonData.images = [];
     }
 
-    if (config.text) {
+    if (config.components.text) {
         if (settings.textEnabled) {
             jsonData.msg = {
-                title: stripHtmlTags(settings.titleContent || ''),
-                text: stripHtmlTags(settings.bodyContent || '')
+                title: settings.titleContent || '',
+                text: settings.bodyContent || ''
             };
         } else {
             jsonData.msg = {};
@@ -84,7 +84,7 @@ export const generateInAppJsonData = (displayType, settings, buttons = []) => {
 
     jsonData.today = settings.showTodayOption ? 'Y' : 'N';
 
-    if (config.button) {
+    if (config.components.button) {
         if (settings.buttonEnabled) {
             jsonData.buttons = buttons
                 .filter(btn => btn.text && btn.text.trim())

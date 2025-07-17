@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { colors } from '../styles/commonStyles.jsx';
 
 /**
  * 토글 박스 컴포넌트
@@ -9,7 +10,7 @@ export const ToggleBox = ({ checked, onChange, disabled = false }) => {
         display: 'inline-block',
         width: '50px',
         height: '24px',
-        background: checked ? '#3dbacb' : '#e1e1e1',
+        background: checked ? colors.primary : colors.gray[200],
         borderRadius: '14px',
         border: 'none',
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -37,7 +38,7 @@ export const ToggleBox = ({ checked, onChange, disabled = false }) => {
         transform: 'translateY(-50%)',
         fontSize: '9px',
         fontWeight: '600',
-        color: checked ? 'white' : '#6b7280',
+        color: checked ? 'white' : colors.gray[500],
         userSelect: 'none',
         transition: 'all 0.3s ease'
     };
@@ -84,7 +85,7 @@ export const RadioButton = ({ options, value, onChange, name }) => {
                         style={{
                             width: '16px',
                             height: '16px',
-                            accentColor: '#1b9bd2',
+                            accentColor: colors.primary,
                             cursor: 'pointer'
                         }}
                     />
@@ -112,7 +113,7 @@ export const CustomSelect = ({ value, onChange, options, placeholder }) => {
                     width: '100%',
                     height: '44px',
                     padding: '12px 16px',
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${colors.gray[300]}`,
                     borderRadius: '8px',
                     fontSize: '14px',
                     background: 'white',
@@ -129,7 +130,7 @@ export const CustomSelect = ({ value, onChange, options, placeholder }) => {
                     transition: '0.2s'
                 }}>
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke={colors.gray[500]} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                 </span>
             </div>
@@ -141,7 +142,7 @@ export const CustomSelect = ({ value, onChange, options, placeholder }) => {
                     left: 0,
                     right: 0,
                     background: 'white',
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${colors.gray[300]}`,
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
                     zIndex: 1000,
@@ -157,10 +158,10 @@ export const CustomSelect = ({ value, onChange, options, placeholder }) => {
                             style={{
                                 padding: '12px 16px',
                                 cursor: 'pointer',
-                                borderBottom: '1px solid #f3f4f6',
+                                borderBottom: `1px solid ${colors.gray[100]}`,
                                 background: option.value === value ? '#e0f7fa' : 'white',
                                 fontWeight: option.value === value ? '600' : '400',
-                                color: option.value === value ? '#169DAF' : 'inherit',
+                                color: option.value === value ? colors.primary : 'inherit',
                                 transition: 'all 0.2s ease'
                             }}
                         >

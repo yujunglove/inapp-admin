@@ -1,4 +1,4 @@
-import { DB_MAPPING } from '../config/dbMapping.js';
+// DB_MAPPING import 제거 - 더 이상 필요없음
 import { initSwiper } from '../utils/swiperUtils.js';
 
 function preserveAllStyles(html) {

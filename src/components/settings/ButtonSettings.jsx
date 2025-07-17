@@ -1,6 +1,16 @@
 import React from 'react';
 import { ToggleBox, RadioButton } from '../UIComponents';
 import { handleUrlCheck } from '../../utils/ValidationUtils';
+import { 
+  getCardStyle, 
+  getCardHeaderStyle, 
+  getCardTitleStyle, 
+  getCardDescriptionStyle, 
+  getCardContentStyle,
+  getInputStyle,
+  commonStyles,
+  CheckIcon
+} from '../../styles/commonStyles.jsx';
 
 export const ButtonSettings = ({
     settings,
@@ -21,46 +31,13 @@ export const ButtonSettings = ({
     const enabled = !!settings.buttonEnabled;
 
     return (
-        <div style={{
-            border: enabled ? '1px solid #169DAF33' : '1px solid #e5e7eb',
-            borderRadius: '18px',
-            boxShadow: enabled
-                ? '0 1px 4px 0 rgba(22,157,175,0.18)'
-                : '0 1px 4px 0 rgba(181, 181, 181, 0.14)',
-            marginBottom: '32px',
-            background: 'white',
-            transition: 'box-shadow .18s cubic-bezier(.4,0,.2,1)'
-        }}>
-            <div style={{
-                background: enabled
-                    ? 'linear-gradient(30deg, #e4f5fa 0%, #c0e6ef 60%, #fafdff 100%)'
-                    : '#f3f6f8',
-                padding: '20px 28px 14px 28px',
-                borderRadius: '18px 18px 0px 0px',
-                borderBottom: enabled ? '1.5px solid #169DAF33' : '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
+        <div style={getCardStyle(enabled)}>
+            <div style={getCardHeaderStyle(enabled)}>
                 <div>
-                    <h4 style={{
-                        margin: 0,
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color: enabled ? '#0e636e' : '#8ba7b3',
-                        letterSpacing: '-0.5px',
-                        transition: 'color .18s'
-                    }}>
+                    <h4 style={getCardTitleStyle(enabled)}>
                         버튼 설정
                     </h4>
-                    <p style={{
-                        margin: '7px 0 0 0',
-                        fontSize: '12px',
-                        color: enabled ? '#4a4e56' : '#b0b8c2',
-                        fontWeight: 400,
-                        opacity: enabled ? 0.92 : 0.7,
-                        transition: 'color .18s, opacity .18s'
-                    }}>
+                    <p style={getCardDescriptionStyle(enabled)}>
                         액션 버튼을 추가하고 설정합니다
                         <span style={{
                             fontSize: '12px', color: '#a0aec0', marginLeft: '8px'
@@ -76,42 +53,16 @@ export const ButtonSettings = ({
             </div>
             {enabled ? (
                 <div style={{
-                    padding: '22px 18px 18px 18px',
-                    background: '#fff',
-                    borderRadius: '0 0 18px 18px',
-                    maxHeight: '500px',
-                    overflowY: 'auto',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
+                    ...getCardContentStyle(enabled),
+                    ...commonStyles.scrollArea.base
                 }}
                 className="button-settings-content"
                 >
                     <style>
-                        {`
-                            .button-settings-content::-webkit-scrollbar {
-                                width: 6px;
-                            }
-                            .button-settings-content::-webkit-scrollbar-track {
-                                background: transparent;
-                            }
-                            .button-settings-content::-webkit-scrollbar-thumb {
-                                background: rgba(156, 163, 175, 0.5);
-                                border-radius: 3px;
-                            }
-                            .button-settings-content::-webkit-scrollbar-thumb:hover {
-                                background: rgba(156, 163, 175, 0.8);
-                            }
-                        `}
+                        {commonStyles.scrollArea.webkit}
                     </style>
                     {buttons.map((button, index) => (
-                        <div key={button.id} style={{
-                            border: '1px solid #e5e7eb',
-                            padding: '20px',
-                            borderRadius: '8px',
-                            marginBottom: '16px',
-                            background: '#f9fafb',
-                            position: 'relative'
-                        }}>
+                        <div key={button.id} style={commonStyles.itemBox.base}>
                             {canRemove && (
                                 <button
                                     type="button"
@@ -119,23 +70,7 @@ export const ButtonSettings = ({
                                         e.preventDefault();
                                         onRemoveButton(button.id);
                                     }}
-                                    style={{
-                                        position: 'absolute',
-                                        top: '12px',
-                                        right: '12px',
-                                        width: '24px',
-                                        height: '24px',
-                                        borderRadius: '50%',
-                                        background: '#e5e7eb',
-                                        color: '#ef4444',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        fontSize: '18px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
+                                    style={commonStyles.button.removeButton}
                                     title="버튼 삭제"
                                 >-</button>
                             )}
@@ -150,12 +85,7 @@ export const ButtonSettings = ({
                                 </h6>
                             </div>
                             <div style={{ marginBottom: '12px' }}>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '6px',
-                                    fontSize: '12px',
-                                    fontWeight: '500'
-                                }}>
+                                <label style={commonStyles.label.base}>
                                     버튼 텍스트
                                 </label>
                                 <input
@@ -163,15 +93,7 @@ export const ButtonSettings = ({
                                     placeholder="버튼 텍스트 입력"
                                     value={button.text}
                                     onChange={(e) => onUpdateButton(button.id, 'text', e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px',
-                                        border: `1px solid ${validationErrors[`button_${button.id}_text`] ? '#dc2626' : '#d1d5db'}`,
-                                        borderRadius: '6px',
-                                        fontSize: '14px',
-                                        boxSizing: 'border-box',
-                                        background: validationErrors[`button_${button.id}_text`] ? '#fef2f2' : 'white'
-                                    }}
+                                    style={getInputStyle(validationErrors[`button_${button.id}_text`])}
                                 />
                             </div>
                             <div style={{ marginBottom: '12px' }}>
@@ -181,7 +103,7 @@ export const ButtonSettings = ({
                                     justifyContent: 'space-between',
                                     marginBottom: '6px'
                                 }}>
-                                    <label style={{ fontSize: '12px', fontWeight: '500' }}>링크 URL</label>
+                                    <label style={commonStyles.label.base}>링크 URL</label>
                                     <button
                                         type="button"
                                         onClick={(e) => {
@@ -189,26 +111,12 @@ export const ButtonSettings = ({
                                             handleUrlCheck(button.url, (message) => showToast(message, e));
                                             onUrlValidation(button.url, 'url', button.id);
                                         }}
-                                        style={{
-                                            padding: '4px 8px',
-                                            background: 'rgb(249, 250, 251)',
-                                            color: 'rgb(107, 114, 128)',
-                                            border: '1px solid rgb(229, 231, 235)',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s ease',
-                                            transform: 'translateY(0)'
-                                        }}
+                                        style={commonStyles.button.base}
                                         onMouseEnter={(e) => {
-                                            e.target.style.background = '#e5e7eb';
-                                            e.target.style.transform = 'translateY(-1px)';
-                                            e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                            Object.assign(e.target.style, commonStyles.button.hover);
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.target.style.background = 'rgb(249, 250, 251)';
-                                            e.target.style.transform = 'translateY(0)';
-                                            e.target.style.boxShadow = 'none';
+                                            Object.assign(e.target.style, commonStyles.button.base);
                                         }}
                                     >
                                         <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
@@ -220,39 +128,22 @@ export const ButtonSettings = ({
                                         placeholder="https://example.com"
                                         value={button.url}
                                         onChange={(e) => onUpdateButton(button.id, 'url', e.target.value)}
-                                        style={{
-                                            width: '100%',
-                                            padding: '10px 12px',
-                                            border: `1px solid ${validationErrors[`button_${button.id}_url`] || urlValidation.errors?.[`button_${button.id}_url`] ? '#dc2626' : '#d1d5db'}`,
-                                            borderRadius: '6px',
-                                            fontSize: '14px',
-                                            boxSizing: 'border-box',
-                                            background: (validationErrors[`button_${button.id}_url`] || urlValidation.errors?.[`button_${button.id}_url`]) ? '#fef2f2' : 'white',
-                                            paddingRight: urlValidation.buttons[button.id] ? '40px' : '16px'
-                                        }}
+                                        style={getInputStyle(
+                                            validationErrors[`button_${button.id}_url`] || urlValidation.errors?.[`button_${button.id}_url`],
+                                            urlValidation.buttons[button.id]
+                                        )}
                                     />
                                     {urlValidation.buttons[button.id] && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            right: '12px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            color: '#10b981',
-                                            fontSize: '16px'
-                                        }}>
-                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
+                                        <div style={commonStyles.checkIcon.container}>
+                                            <CheckIcon />
                                         </div>
                                     )}
                                 </div>
                             </div>
                             <div>
                                 <label style={{
-                                    display: 'block',
-                                    marginBottom: '6px',
-                                    fontSize: '14px',
-                                    fontWeight: '500'
+                                    ...commonStyles.label.base,
+                                    fontSize: '14px'
                                 }}>
                                     링크 열기
                                 </label>
@@ -277,31 +168,19 @@ export const ButtonSettings = ({
                             }}
                             disabled={!canAdd}
                             style={{
-                                width: '34px',
-                                height: '34px',
-                                borderRadius: '50%',
-                                border: '1px solid #e5e7eb',
-                                background: canAdd ? '#f5f9fc' : '#f1f5f9',
-                                color: canAdd ? '#169DAF' : '#c9c9c9',
-                                fontSize: '22px',
-                                cursor: canAdd ? 'pointer' : 'not-allowed',
-                                fontWeight: 'bold'
+                                ...commonStyles.button.addButton,
+                                ...(canAdd ? {} : {
+                                    background: '#f1f5f9',
+                                    color: '#c9c9c9',
+                                    cursor: 'not-allowed'
+                                })
                             }}
                             title="버튼 추가"
                         >+</button>
                     </div>
                 </div>
             ) : (
-                <div style={{
-                    padding: '36px 28px 36px 28px',
-                    background: '#f9fafb',
-                    borderRadius: '0 0 18px 18px',
-                    textAlign: 'center',
-                    color: '#adbcc6',
-                    fontSize: '12px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.2px'
-                }}>
+                <div style={getCardContentStyle(enabled)}>
                     버튼 입력이 비활성화되어 있습니다.
                 </div>
             )}

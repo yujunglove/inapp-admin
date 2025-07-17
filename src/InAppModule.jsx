@@ -9,7 +9,7 @@ import { UnifiedSettings } from './components/UnifiedSettings';
 import { useInAppData, useInAppSelections } from './hooks/useInAppData';
 import {getCurrentItems, getCurrentStepTitle, getCurrentStepNumber, isNextEnabled,} from './utils/inAppUtils';
 import { InAppService } from './services/inAppService';
-import { createDefaultPreviewData } from './config/dbMapping';
+import { createDefaultPreviewData } from './config/appConfig';
 import { generatePopupHTML } from './components/popupGenerator';
 
 const THEME_MAPPING = {
