@@ -53,7 +53,7 @@ export const LocationSettings = ({ location = 'TOP', onChange }) => {
             </div>
             <div
                 style={{
-                    padding: '32px 28px 28px 28px',
+                    padding: '22px 18px 18px 18px',
                     background: 'white',
                     borderRadius: '0 0 18px 18px'
                 }}

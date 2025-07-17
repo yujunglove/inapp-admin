@@ -14,9 +14,10 @@ export const ContentSection = styled.div.attrs({
 })`
     display: flex;
     flex-direction: column;
-    width: 37%;
+    width: 55%;
     border-right: 1px solid #e9e9e9;
     background: #ffffff;
+    overflow: hidden;  /* 자식 요소의 스크롤바가 밖으로 나오지 않도록 */
 `;
 
 export const ContentArea = styled.div.attrs({
@@ -24,8 +25,27 @@ export const ContentArea = styled.div.attrs({
 })`
     padding: 24px;
     flex: 1;  /* 남은 공간 모두 차지 */
-    overflow-y: auto;
+    overflow-y: overlay;  /* 스크롤바가 콘텐츠 위에 오버레이 */
+    scrollbar-gutter: stable;  /* 스크롤바 공간 항상 확보 */
     min-height: 0;  /* flex에서 overflow가 제대로 작동하도록 */
+    
+    /* 스크롤바 스타일링 */
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: rgba(156, 163, 175, 0.5);
+        border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(156, 163, 175, 0.8);
+    }
 `;
 
 export const NavigationArea = styled.div.attrs({
@@ -180,17 +200,26 @@ export const ItemImage = styled.div.attrs({
         object-fit: contain;
     }
 
-    /* 슬라이드형 이미지에 대한 특별한 스타일 */
-
-    img[src*="slide-removebg-preview.png"] {
+    /* 각 타입별 특별한 스타일 */
+    &.slide-type img {
         margin-top: 15px;
         width: 125% !important;
         height: 115% !important;
     }
 
-    img[src*="star-removebg-preview.png"] {
+    &.star-type img {
         width: 85% !important;
         height: 85% !important;
+    }
+
+    &.bar-type img {
+        width: 110% !important;
+        height: 110% !important;
+    }
+
+    &.box-type img {
+        width: 125% !important;
+        height: 125% !important;
     }
 
 `;
@@ -252,49 +281,23 @@ export const NextButton = styled.button.attrs({
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
     outline: none !important;
     color: #ffffff;
-    position: relative;
-    overflow: hidden;
-
-    &:before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-    }
 
     &:hover {
         background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-        transform: translateX(3px) scale(1.15) rotate(5deg);
-        box-shadow: 0 12px 30px rgba(107, 114, 128, 0.5);
-    }
-
-    &:hover:before {
-        width: 80px;
-        height: 80px;
+        transform: scale(1.05);
     }
 
     &:active {
-        transform: translateX(2px) scale(1.1) rotate(3deg);
+        transform: scale(0.95);
     }
 
     &:disabled {
         background: #d1d5db;
         cursor: not-allowed;
         transform: none;
-        box-shadow: none;
-    }
-
-    &:disabled:before {
-        display: none;
     }
 
     svg {
@@ -302,22 +305,17 @@ export const NextButton = styled.button.attrs({
         height: 17px;
         stroke: white;
         stroke-width: 2.5;
-        transition: all 0.3s ease;
-        z-index: 1;
-    }
-
-    &:hover svg {
-        transform: translateX(2px) scale(1.1);
     }
 `;
 
 export const PreviewSection = styled.div.attrs({
     className: 'preview-section'
 })`
-    width: 63%;
+    width: 60%;
     background: #fafafa; /* 다시 흰색으로 */
     padding: 14px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative; /* 토스트 위치를 위한 relative 설정 */
 `;

@@ -86,7 +86,12 @@ function generateBarContent(data, messageId) {
         const img = data.images[0];
         if (img.action === 'L' && img.linkUrl) {
             const target = img.linkOpt === 'B' ? '_blank' : '_self';
-            html += `<a href="${img.linkUrl}" target="${target}"><img src="${img.url}" alt=""></a>`;
+            // URL 검증 추가
+            let finalUrl = img.linkUrl;
+            if (!finalUrl || finalUrl === '#' || finalUrl.startsWith('#')) {
+                finalUrl = 'javascript:void(0)';
+            }
+            html += `<a href="${finalUrl}" target="${target}" onclick="return handleImageClick(event, '${img.linkUrl}', '${target}')"><img src="${img.url}" alt=""></a>`;
         } else {
             html += `<img src="${img.url}" alt="">`;
         }
@@ -153,7 +158,12 @@ function generateSlideContent(data, messageId) {
             html += `<div class="swiper-slide" data-swiper-slide-index="${index}">`;
             if (img.action === 'L' && img.linkUrl) {
                 const target = img.linkOpt === 'B' ? '_blank' : '_self';
-                html += `<a href="${img.linkUrl}" target="${target}"><img src="${img.url}" alt=""></a>`;
+                // URL 검증 추가
+                let finalUrl = img.linkUrl;
+                if (!finalUrl || finalUrl === '#' || finalUrl.startsWith('#')) {
+                    finalUrl = 'javascript:void(0)';
+                }
+                html += `<a href="${finalUrl}" target="${target}" onclick="return handleImageClick(event, '${img.linkUrl}', '${target}')"><img src="${img.url}" alt=""></a>`;
             } else {
                 html += `<img src="${img.url}" alt="">`;
             }
@@ -189,7 +199,12 @@ function generateRegularContent(data, messageId) {
         const img = data.images[0];
         if (img.action === 'L' && img.linkUrl) {
             const target = img.linkOpt === 'B' ? '_blank' : '_self';
-            html += `<a href="${img.linkUrl}" target="${target}"><img src="${img.url}" alt=""></a>`;
+            // URL 검증 추가
+            let finalUrl = img.linkUrl;
+            if (!finalUrl || finalUrl === '#' || finalUrl.startsWith('#')) {
+                finalUrl = 'javascript:void(0)';
+            }
+            html += `<a href="${finalUrl}" target="${target}" onclick="return handleImageClick(event, '${img.linkUrl}', '${target}')"><img src="${img.url}" alt=""></a>`;
         } else {
             html += `<img src="${img.url}" alt="">`;
         }
@@ -263,7 +278,13 @@ function generateButtonContent(data, messageId) {
 
     validButtons.forEach((btn, index) => {
         const target = btn.linkOpt === 'B' ? '_blank' : '_self';
-        html += `<div class="qdx_view_btn"><a id="qdx_btn_${messageId}_${index + 1}" class="qdx_link" href="${btn.linkUrl}" target="${target}">${btn.text}</a></div>`;
+        // URL이 #으로 시작하거나 javascript:void(0) 같은 경우 처리
+        let finalUrl = btn.linkUrl;
+        if (!finalUrl || finalUrl === '#' || finalUrl.startsWith('#')) {
+            finalUrl = 'javascript:void(0)';
+        }
+        
+        html += `<div class="qdx_view_btn"><a id="qdx_btn_${messageId}_${index + 1}" class="qdx_link" href="${finalUrl}" target="${target}" onclick="return handleButtonClick(event, '${btn.linkUrl}', '${target}')">${btn.text}</a></div>`;
     });
 
     html += '</div>';

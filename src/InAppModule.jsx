@@ -968,6 +968,12 @@ const InAppModule = ({
                     if (popup) {
                         applyFontStyles(popup);
                         
+                        // zoom 재적용 (텍스트 토글 시에도 유지)
+                        const popupBox = popup.querySelector('.qdx_popup_box');
+                        if (popupBox) {
+                            popupBox.style.zoom = '0.9';
+                        }
+                        
                         const slideElement = popup.querySelector('#qdx_slide');
                         if (slideElement) {
                             setTimeout(() => {
@@ -996,17 +1002,16 @@ const InAppModule = ({
             popup.style.background = '#fafafa';
             applyFontStyles(popup);
             
+            // 전체 팝업 박스에 고정 zoom 적용
+            const popupBox = popup.querySelector('.qdx_popup_box');
+            if (popupBox) {
+               popupBox.style.zoom = '0.9';  // 0.9로 조정
+            }
+            
             const contElement = popup.querySelector('.qdx_cont');
             if (contElement) {
                 contElement.style.boxShadow = 'rgba(0, 0, 0, 0.2) 8px 8px 24px 8px';
-                
-                const slideElement = popup.querySelector('#qdx_slide');
-                const boxElement = popup.querySelector('#qdx_type_slide, #qdx_type_box');
-                
-                if (slideElement || boxElement) {
-                    contElement.style.transform = 'scale(0.85)';
-                    contElement.style.transformOrigin = 'center';
-                }
+                contElement.style.transform = 'none';
             }
         }
         
@@ -1049,6 +1054,40 @@ const InAppModule = ({
         }
         
         window.selectStar = selectStar;
+        
+        // 버튼 클릭 핸들러 추가
+        window.handleButtonClick = function(event, url, target) {
+            // 빈 URL이나 # 만 있는 경우 기본 동작 방지
+            if (!url || url === '#' || url.startsWith('#')) {
+                event.preventDefault();
+                console.log('Empty or hash-only URL, preventing navigation');
+                return false;
+            }
+            
+            // 정상적인 URL인 경우
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                // target에 따라 처리
+                if (target === '_blank') {
+                    window.open(url, '_blank');
+                } else {
+                    window.location.href = url;
+                }
+                event.preventDefault();
+                return false;
+            }
+            
+            // 상대 경로인 경우 기본 동작 방지
+            event.preventDefault();
+            console.log('Relative URL detected, preventing navigation:', url);
+            return false;
+        };
+        
+        // 이미지 클릭 핸들러 추가
+        window.handleImageClick = function(event, url, target) {
+            // 버튼 클릭과 동일한 로직 적용
+            return window.handleButtonClick(event, url, target);
+        };
+        
         initLocalQdx();
     </script>
 </body>

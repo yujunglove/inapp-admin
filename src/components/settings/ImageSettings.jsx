@@ -64,8 +64,16 @@ export const ImageSettings = ({
 
         if (field === 'url') {
             onUrlValidation(value, `image_${imageId}_url`);
+            // URL 에러 상태 지우기
+            if (onInputChange) {
+                onInputChange('clearUrlError', { field: `image_${imageId}_url` });
+            }
         } else if (field === 'linkUrl') {
             onUrlValidation(value, `image_${imageId}_linkUrl`);
+            // URL 에러 상태 지우기
+            if (onInputChange) {
+                onInputChange('clearUrlError', { field: `image_${imageId}_linkUrl` });
+            }
         }
     };
 
@@ -131,7 +139,7 @@ export const ImageSettings = ({
             </div>
 
             {enabled ? (
-                <div style={{ padding: '32px 28px 28px 28px', background: '#fff', borderRadius: '0 0 18px 18px' }}>
+                <div style={{ padding: '22px 18px 18px 18px', background: '#fff', borderRadius: '0 0 18px 18px' }}>
                     {isSlideType ? (
                         <>
                             {images.map((image, index) => (
@@ -188,7 +196,7 @@ export const ImageSettings = ({
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    handleUrlCheck(image.url, showToast);
+                                                    handleUrlCheck(image.url, (message) => showToast(message, e));
                                                     onUrlValidation(image.url, `image_${image.id}_url`);
                                                 }}
                                                 style={{
@@ -225,11 +233,12 @@ export const ImageSettings = ({
                                                 style={{
                                                     width: '100%',
                                                     padding: '10px 12px',
-                                                    border: '1px solid #d1d5db',
+                                                    border: `1px solid ${urlValidation.errors?.[`image_${image.id}_url`] ? '#dc2626' : '#d1d5db'}`,
                                                     borderRadius: '6px',
                                                     fontSize: '14px',
                                                     boxSizing: 'border-box',
-                                                    paddingRight: urlValidation[`image_${image.id}_url`] ? '40px' : '12px'
+                                                    paddingRight: urlValidation[`image_${image.id}_url`] ? '40px' : '12px',
+                                                    background: urlValidation.errors?.[`image_${image.id}_url`] ? '#fef2f2' : 'white'
                                                 }}
                                             />
                                             {urlValidation[`image_${image.id}_url`] && (
@@ -268,8 +277,8 @@ export const ImageSettings = ({
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                                                     <label style={{ fontWeight: '500', margin: 0, fontSize: '14px' }}>링크 URL</label>
                                                     <button
-                                                        onClick={() => {
-                                                            handleUrlCheck(image.linkUrl, showToast);
+                                                        onClick={(e) => {
+                                                            handleUrlCheck(image.linkUrl, (message) => showToast(message, e));
                                                             onUrlValidation(image.linkUrl, `image_${image.id}_linkUrl`);
                                                         }}
                                                         style={{
@@ -306,11 +315,12 @@ export const ImageSettings = ({
                                                         style={{
                                                             width: '100%',
                                                             padding: '10px 12px',
-                                                            border: '1px solid #d1d5db',
+                                                            border: `1px solid ${urlValidation.errors?.[`image_${image.id}_linkUrl`] ? '#dc2626' : '#d1d5db'}`,
                                                             borderRadius: '6px',
                                                             fontSize: '14px',
                                                             boxSizing: 'border-box',
-                                                            paddingRight: urlValidation[`image_${image.id}_linkUrl`] ? '40px' : '12px'
+                                                            paddingRight: urlValidation[`image_${image.id}_linkUrl`] ? '40px' : '12px',
+                                                            background: urlValidation.errors?.[`image_${image.id}_linkUrl`] ? '#fef2f2' : 'white'
                                                         }}
                                                     />
                                                     {urlValidation[`image_${image.id}_linkUrl`] && (
@@ -376,7 +386,7 @@ export const ImageSettings = ({
                                                         type="button"
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            handleUrlCheck(settings.imageUrl, showToast);
+                                                            handleUrlCheck(settings.imageUrl, (message) => showToast(message, e));
                                                             onUrlValidation(settings.imageUrl, 'imageUrl');
                                                         }}
                                         style={{
@@ -408,10 +418,10 @@ export const ImageSettings = ({
                                             width: '100%',
                                             height: '44px',
                                             padding: '12px 16px',
-                                            border: `1px solid ${validationErrors.imageUrl ? '#dc2626' : '#d1d5db'}`,
+                                            border: `1px solid ${validationErrors.imageUrl || urlValidation.errors?.imageUrl ? '#dc2626' : '#d1d5db'}`,
                                             borderRadius: '8px',
                                             fontSize: '14px',
-                                            background: validationErrors.imageUrl ? '#fef2f2' : 'white',
+                                            background: (validationErrors.imageUrl || urlValidation.errors?.imageUrl) ? '#fef2f2' : 'white',
                                             paddingRight: urlValidation.imageUrl ? '40px' : '16px',
                                             boxSizing: 'border-box'
                                         }}
@@ -457,8 +467,8 @@ export const ImageSettings = ({
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                             <label style={{ fontWeight: '500', margin: 0 }}>링크 URL</label>
                                             <button
-                                                onClick={() => {
-                                                    handleUrlCheck(settings.linkUrl, showToast);
+                                                onClick={(e) => {
+                                                    handleUrlCheck(settings.linkUrl, (message) => showToast(message, e));
                                                     onUrlValidation(settings.linkUrl, 'linkUrl');
                                                 }}
                                                 style={{
@@ -490,10 +500,10 @@ export const ImageSettings = ({
                                                     width: '100%',
                                                     height: '44px',
                                                     padding: '12px 16px',
-                                                    border: `1px solid ${validationErrors.linkUrl ? '#dc2626' : '#d1d5db'}`,
+                                                    border: `1px solid ${validationErrors.linkUrl || urlValidation.errors?.linkUrl ? '#dc2626' : '#d1d5db'}`,
                                                     borderRadius: '8px',
                                                     fontSize: '14px',
-                                                    background: validationErrors.linkUrl ? '#fef2f2' : 'white',
+                                                    background: (validationErrors.linkUrl || urlValidation.errors?.linkUrl) ? '#fef2f2' : 'white',
                                                     paddingRight: urlValidation.linkUrl ? '40px' : '16px',
                                                     boxSizing: 'border-box'
                                                 }}

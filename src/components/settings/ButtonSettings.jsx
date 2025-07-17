@@ -76,7 +76,7 @@ export const ButtonSettings = ({
             </div>
             {enabled ? (
                 <div style={{
-                    padding: '32px 28px 28px 28px',
+                    padding: '22px 18px 18px 18px',
                     background: '#fff',
                     borderRadius: '0 0 18px 18px'
                 }}>
@@ -163,7 +163,7 @@ export const ButtonSettings = ({
                                         type="button"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            handleUrlCheck(button.url, showToast);
+                                            handleUrlCheck(button.url, (message) => showToast(message, e));
                                             onUrlValidation(button.url, 'url', button.id);
                                         }}
                                         style={{
@@ -200,11 +200,11 @@ export const ButtonSettings = ({
                                         style={{
                                             width: '100%',
                                             padding: '10px 12px',
-                                            border: `1px solid ${validationErrors[`button_${button.id}_url`] ? '#dc2626' : '#d1d5db'}`,
+                                            border: `1px solid ${validationErrors[`button_${button.id}_url`] || urlValidation.errors?.[`button_${button.id}_url`] ? '#dc2626' : '#d1d5db'}`,
                                             borderRadius: '6px',
                                             fontSize: '14px',
                                             boxSizing: 'border-box',
-                                            background: validationErrors[`button_${button.id}_url`] ? '#fef2f2' : 'white',
+                                            background: (validationErrors[`button_${button.id}_url`] || urlValidation.errors?.[`button_${button.id}_url`]) ? '#fef2f2' : 'white',
                                             paddingRight: urlValidation.buttons[button.id] ? '40px' : '16px'
                                         }}
                                     />

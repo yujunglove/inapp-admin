@@ -33,9 +33,10 @@ export const UnifiedSettings = forwardRef(({
     const [urlValidation, setUrlValidation] = useState({
         imageUrl: false,
         linkUrl: false,
-        buttons: {}
+        buttons: {},
+        errors: {} // 에러 상태 추가
     });
-    const [toast, setToast] = useState({ show: false, message: '' });
+    const [toast, setToast] = useState({ show: false, message: '', position: { top: 20, right: 20 } });
     const [hasUserInput, setHasUserInput] = useState(false);
     const [currentImages, setCurrentImages] = useState([]);
     const [buttons, setButtons] = useState([]);
@@ -104,21 +105,111 @@ export const UnifiedSettings = forwardRef(({
         setValidationErrors({});
     }, [displayType]);
 
-    const showToast = (message) => {
-        setToast({ show: true, message });
-        setTimeout(() => setToast({ show: false, message: '' }), 3000);
+    const clearUrlError = (field, buttonId = null) => {
+        if (buttonId) {
+            setUrlValidation(prev => ({
+                ...prev,
+                errors: { ...prev.errors, [`button_${buttonId}_url`]: false }
+            }));
+        } else {
+            setUrlValidation(prev => ({
+                ...prev,
+                errors: { ...prev.errors, [field]: false }
+            }));
+        }
+    };
+
+    const showToast = (message, event = null) => {
+        let position = { top: 20, right: 20, fixed: false }; // 기본 위치
+        
+        if (event && event.target) {
+            const buttonRect = event.target.getBoundingClientRect();
+            
+            // 뷰포트 기준으로 위치 계산 (fixed 포지셔닝)
+            position = {
+                top: Math.max(10, buttonRect.top - 60), // 버튼 위 60px, 최소 10px
+                left: Math.max(10, buttonRect.left - 50), // 버튼보다 약간 왼쪽
+                right: 'auto',
+                fixed: true // fixed 포지셔닝 사용
+            };
+            
+            // 화면 오른쪽 밖으로 나가지 않도록 조정
+            const maxLeft = window.innerWidth - 250;
+            if (position.left > maxLeft) {
+                position.left = maxLeft;
+            }
+            
+            // 화면 위쪽 밖으로 나가지 않도록 조정
+            if (position.top < 10) {
+                position.top = buttonRect.bottom + 10; // 버튼 아래로 표시
+            }
+        }
+        
+        setToast({ show: true, message, position });
+        setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
     };
 
     const checkUrlValidation = (url, field, buttonId = null) => {
-        const isValid = url && /^https?:\/\/.+/.test(url);
+        // 빈 URL은 검증하지 않음
+        if (!url || !url.trim()) {
+            if (buttonId) {
+                setUrlValidation(prev => ({
+                    ...prev,
+                    buttons: { ...prev.buttons, [buttonId]: false },
+                    errors: { ...prev.errors, [`button_${buttonId}_url`]: false }
+                }));
+            } else {
+                setUrlValidation(prev => ({ 
+                    ...prev, 
+                    [field]: false,
+                    errors: { ...prev.errors, [field]: false }
+                }));
+            }
+            return false;
+        }
+
+        // URL 검증 로직
+        let isValid = false;
+        
+        try {
+            // 1. 기본 http/https 형식 검증
+            const httpRegex = /^https?:\/\/.+/;
+            if (httpRegex.test(url)) {
+                // 2. URL 객체로 파싱 가능한지 확인
+                new URL(url);
+                isValid = true;
+            }
+        } catch (e) {
+            isValid = false;
+        }
+
+        // 3. 추가 검증 규칙
+        if (isValid) {
+            // 도메인 부분 확인
+            const domainMatch = url.match(/^https?:\/\/([^\/]+)/);
+            if (domainMatch) {
+                const domain = domainMatch[1];
+                // 유효한 도메인 형식인지 확인 (최소한 점이 있어야 함)
+                if (!domain.includes('.') || domain.endsWith('.') || domain.startsWith('.')) {
+                    isValid = false;
+                }
+            } else {
+                isValid = false;
+            }
+        }
 
         if (buttonId) {
             setUrlValidation(prev => ({
                 ...prev,
-                buttons: { ...prev.buttons, [buttonId]: isValid }
+                buttons: { ...prev.buttons, [buttonId]: isValid },
+                errors: { ...prev.errors, [`button_${buttonId}_url`]: !isValid }
             }));
         } else {
-            setUrlValidation(prev => ({ ...prev, [field]: isValid }));
+            setUrlValidation(prev => ({ 
+                ...prev, 
+                [field]: isValid,
+                errors: { ...prev.errors, [field]: !isValid }
+            }));
         }
 
         return isValid;
@@ -129,7 +220,21 @@ export const UnifiedSettings = forwardRef(({
     };
 
     const handleInputChange = (field, value) => {
+        // clearUrlError 처리
+        if (field === 'clearUrlError' && value?.field) {
+            setUrlValidation(prev => ({
+                ...prev,
+                errors: { ...prev.errors, [value.field]: false }
+            }));
+            return;
+        }
+
         setSettings(prev => ({ ...prev, [field]: value }));
+        
+        // URL 에러 상태 지우기
+        if (field === 'imageUrl' || field === 'linkUrl') {
+            clearUrlError(field);
+        }
         
         if (field === 'images' && Array.isArray(value)) {
             if (value.length > 0 && value.some(img => img.url && img.url.trim()) && !hasUserInput) {
@@ -246,6 +351,11 @@ export const UnifiedSettings = forwardRef(({
             console.log('🔘 업데이트된 버튼 배열:', updated);
             return updated;
         });
+
+        // URL 에러 상태 지우기
+        if (field === 'url') {
+            clearUrlError('url', buttonId);
+        }
 
         if (value && typeof value === 'string' && value.trim() && !hasUserInput) {
             setHasUserInput(true);
@@ -454,18 +564,36 @@ export const UnifiedSettings = forwardRef(({
 
             {toast.show && (
                 <div style={{
-                    position: 'fixed',
-                    top: '20px',
-                    right: '20px',
+                    position: toast.position.fixed ? 'fixed' : 'absolute',
+                    top: toast.position.top + 'px',
+                    left: toast.position.left !== undefined ? toast.position.left + 'px' : 'auto',
+                    right: toast.position.right !== 'auto' ? toast.position.right + 'px' : 'auto',
                     background: '#333',
                     color: 'white',
-                    padding: '12px 20px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    zIndex: 1000,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    zIndex: 9999, // 매우 높은 z-index로 설정
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    maxWidth: '200px',
+                    wordWrap: 'break-word',
+                    pointerEvents: 'none',
+                    whiteSpace: 'nowrap'
                 }}>
                     {toast.message}
+                    {/* 말풍선 꼬리 */}
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '-6px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '6px solid transparent',
+                        borderRight: '6px solid transparent',
+                        borderTop: '6px solid #333'
+                    }} />
                 </div>
             )}
         </div>

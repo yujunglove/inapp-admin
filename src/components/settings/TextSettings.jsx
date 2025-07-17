@@ -68,7 +68,7 @@ export const TextSettings = ({
             </div>
             {enabled ? (
                 <div style={{
-                    padding: '32px 28px 28px 28px',
+                    padding: '22px 18px 18px 18px',
                     background: '#fff',
                     borderRadius: '0 0 18px 18px'
                 }}>

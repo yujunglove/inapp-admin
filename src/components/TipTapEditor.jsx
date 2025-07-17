@@ -215,8 +215,7 @@ const TipTapEditor = ({
                             editor.chain().focus().setFontFamily(e.target.value).run();
                         }
                     }}
-                    className="toolbar-select"
-                    style={{ minWidth: '75px'}}
+                    className="toolbar-select font-select"
                 >
                     <option value="">기본 폰트</option>
                     <option value="'Nanum Gothic', sans-serif">나눔고딕</option>
@@ -239,8 +238,7 @@ const TipTapEditor = ({
                             editor.chain().focus().setMark('textStyle', { fontSize: fontSize + 'px' }).run();
                         }
                     }}
-                    className="toolbar-select"
-                    style={{ minWidth: '50px', maginLeft: '5px'}}
+                    className="toolbar-select size-select"
                     defaultValue="10"
                 >
                     <option value="">크기</option>
@@ -432,19 +430,34 @@ const TipTapEditor = ({
             color: white;
         }
         
-        .toolbar-select {
-            padding: 5px 9px;
+        .toolbar .toolbar-select {
             border: 1px solid #d1d5db;
             border-radius: 8px;
             background: white;
             font-size: 12px;
             color: #374151;
             cursor: pointer;
-            min-width: 105px;
+            min-width: 85px !important;
             flex-shrink: 0;
         }
         
-        .toolbar-select:focus {
+  div.toolbar select.toolbar-select.font-select {
+    width: 95px !important;
+    flex-basis: 75px !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+
+div.toolbar select.toolbar-select.size-select {
+    width: 70px !important;
+    flex-basis: 50px !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+        
+        .toolbar .toolbar-select:focus {
             outline: none;
             border-color: #3b82f6;
         }
@@ -602,7 +615,7 @@ const TipTapEditor = ({
                         </label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span style={{
-                                fontSize: '10px',
+                                fontSize: '13px',
                                 color: '#6b7280',
                                 padding: '4px 8px',
                             }}>
