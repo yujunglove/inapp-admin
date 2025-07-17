@@ -1,5 +1,4 @@
 // DB_MAPPING import 제거 - 더 이상 필요없음
-import { initSwiper } from '../utils/swiperUtils.js';
 
 function preserveAllStyles(html) {
     if (!html) return '';
@@ -68,10 +67,7 @@ export function generatePopupHTML(messageId, data) {
     }
 
     if (displayType === 'slide') {
-        setTimeout(() => {
-            const sliderId = `qdx_slide`;
-            initSwiper(sliderId);
-        }, 100);
+        // Swiper는 iframe 내부에서 초기화됨
     }
 
     return html;

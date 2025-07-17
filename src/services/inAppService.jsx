@@ -1,3 +1,81 @@
+import { HARDCODED_DATA } from '../config/appConfig';
+
+// API 설정 관련
+export const createApiConfig = (config) => {
+    return {
+        displayUrl: config.displayUrl || config.getInAppDisplayUrl || '',
+        themeUrl: config.themeUrl || config.getInAppThemeUrl || '',
+        locationUrl: config.locationUrl || config.getInAppLocationUrl || '',
+        templateUrl: config.templateUrl || config.getInAppTemplateUrl || '',
+        fetchFunction: config.fetchFunction || window.fetch
+    };
+};
+
+export const hasValidApiUrls = (apiConfig) => {
+    return apiConfig.displayUrl && apiConfig.themeUrl &&
+        apiConfig.locationUrl && apiConfig.templateUrl;
+};
+
+export const loadInAppData = async (apiConfig) => {
+    try {
+        if (!hasValidApiUrls(apiConfig)) {
+            return {
+                displayTypes: HARDCODED_DATA.displayTypes,
+                themes: [],
+                locations: HARDCODED_DATA.locations,
+                templates: []
+            };
+        }
+
+        const fetchFn = apiConfig.fetchFunction;
+
+        const [displayRes, themeRes, locationRes, templateRes] = await Promise.all([
+            fetchFn(apiConfig.displayUrl),
+            fetchFn(apiConfig.themeUrl),
+            fetchFn(apiConfig.locationUrl),
+            fetchFn(apiConfig.templateUrl)
+        ]);
+
+        let newDisplayTypes = [];
+        let newThemes = [];
+        let newLocations = [];
+        let newTemplates = [];
+
+        if (displayRes && displayRes.success) {
+            newDisplayTypes = displayRes.codeList || [];
+        }
+
+        if (themeRes && themeRes.success) {
+            newThemes = themeRes.codeList || [];
+        }
+
+        if (locationRes && locationRes.success) {
+            newLocations = locationRes.codeList || [];
+        }
+
+        if (templateRes && templateRes.success) {
+            newTemplates = templateRes.codeList || [];
+        }
+
+        return {
+            displayTypes: newDisplayTypes,
+            themes: newThemes,
+            locations: newLocations,
+            templates: newTemplates
+        };
+
+    } catch (err) {
+        // 에러 발생 시 하드코딩된 데이터 반환
+        return {
+            displayTypes: HARDCODED_DATA.displayTypes,
+            themes: [],
+            locations: HARDCODED_DATA.locations,
+            templates: []
+        };
+    }
+};
+
+// InApp 메시지 서비스
 export class InAppService {
 
     static config = {
@@ -114,7 +192,7 @@ export class InAppService {
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>InApp JSON 데이터 (새로운 형식)</title>
+                    <title>InApp JSON 데이터</title>
                     <style>
                         body { 
                             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -162,14 +240,6 @@ export class InAppService {
                             border-radius: 6px;
                             margin-bottom: 20px;
                         }
-                        .format-info {
-                            background: #dbeafe;
-                            border: 1px solid #3b82f6;
-                            color: #1e40af;
-                            padding: 12px;
-                            border-radius: 6px;
-                            margin-bottom: 20px;
-                        }
                     </style>
                 </head>
                 <body>
@@ -177,10 +247,7 @@ export class InAppService {
                         <div class="alert">
                             ⚠️ qdx 라이브러리를 사용할 수 없어 JSON 데이터를 표시합니다.
                         </div>
-                        <div class="format-info">
-                            ℹ️ 새로운 형식: template과 theme이 통합되었고, show 배열로 표시 컴포넌트를 관리합니다.
-                        </div>
-                        <h1>InApp JSON 데이터 (새로운 형식)</h1>
+                        <h1>InApp JSON 데이터</h1>
                         <pre id="jsonData">${jsonString}</pre>
                         <button class="btn" onclick="copyToClipboard()">📋 클립보드에 복사</button>
                         <button class="btn" onclick="window.close()">❌ 닫기</button>

@@ -1,7 +1,7 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
-import { validateSettings, clearFieldError } from '../utils/ValidationUtils';
+import { validateSettings, clearFieldError, validateJsonData } from '../utils/ValidationUtils';
 import { getDisplayConfig, getActiveComponents, createInitialSettings, canToggleComponent } from '../config/appConfig';
-import { generateInAppJsonData, validateJsonData } from '../utils/jsonDataGenerator';
+import { generateInAppJsonData } from '../utils/jsonDataGenerator';
 import { LocationSettings } from './settings/LocationSettings';
 import { ImageSettings } from './settings/ImageSettings';
 import { TextSettings } from './settings/TextSettings';

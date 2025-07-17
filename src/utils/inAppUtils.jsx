@@ -1,8 +1,8 @@
 // 이미지들을 import
-import barImage from '../images/bar-removebg-preview.png';
-import boxImage from '../images/box-removebg-preview.png';
-import slideImage from '../images/slide-removebg-preview.png';
-import starImage from '../images/star-removebg-preview.png';
+import barImage from '../assets/bar-removebg-preview.png';
+import boxImage from '../assets/box-removebg-preview.png';
+import slideImage from '../assets/slide-removebg-preview.png';
+import starImage from '../assets/star-removebg-preview.png';
 
 export const getCurrentItems = (currentStep, displayTypes, locations, selections) => {
     if (currentStep === 1) {

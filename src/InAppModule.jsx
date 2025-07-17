@@ -2,42 +2,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     ModuleWrapper, ContentSection, Header, HeaderIcon, StepTitle, StepNumber,
     ContentArea, NavigationArea, BackButton, NextButton, PreviewSection, 
-    PreviewControlsArea, PreviewControlButton, LocationDropdown, PreviewIframeContainer} from './styles/StyledComponents';
-import {BackIcon, NextIcon, DisplayIcon, ImageIcon} from './components/Icons';
+    PreviewIframeContainer
+} from './styles/StyledComponents';
+import { BackIcon, NextIcon, DisplayIcon, ImageIcon } from './components/Icons';
 import SelectionGridComponent from './components/SelectionGrid';
 import { UnifiedSettings } from './components/UnifiedSettings';
+import PreviewIframe from './components/PreviewIframe';
+import PreviewControls from './components/PreviewControls';
+import JsonModal from './components/JsonModal';
 import { useInAppData, useInAppSelections } from './hooks/useInAppData';
-import {getCurrentItems, getCurrentStepTitle, getCurrentStepNumber, isNextEnabled,} from './utils/inAppUtils';
+import { getCurrentItems, getCurrentStepTitle, getCurrentStepNumber, isNextEnabled } from './utils/inAppUtils';
+import { calculateTheme } from './utils/themeUtils';
 import { InAppService } from './services/inAppService';
 import { createDefaultPreviewData } from './config/appConfig';
 import { generatePopupHTML } from './components/popupGenerator';
-
-const THEME_MAPPING = {
-    BAR: {
-        'images': { theme: 'T1', code: 'M1', cssClass: 'qdx_theme1-1' },
-        'msg': { theme: 'T2', code: 'M2', cssClass: 'qdx_theme1-2' },
-        'images,msg': { theme: 'T3', code: 'M3', cssClass: 'qdx_theme1-3' }
-    },
-    BOX: {
-        'images': { theme: 'T4', code: 'M1', cssClass: 'qdx_theme2-1' },
-        'images,buttons': { theme: 'T5', code: 'M4', cssClass: 'qdx_theme2-2' },
-        'images,buttons2': { theme: 'T6', code: 'M5', cssClass: 'qdx_theme2-3' },
-        'images,msg': { theme: 'T7', code: 'M3', cssClass: 'qdx_theme2-4' },
-        'images,msg,buttons': { theme: 'T8', code: 'M6', cssClass: 'qdx_theme2-5' },
-        'images,msg,buttons2': { theme: 'T9', code: 'M7', cssClass: 'qdx_theme2-6' }
-    },
-    SLIDE: {
-        'images': { theme: 'T10', code: 'M1', cssClass: 'qdx_theme3-1' },
-        'images,buttons': { theme: 'T11', code: 'M4', cssClass: 'qdx_theme3-2' },
-        'images,buttons2': { theme: 'T12', code: 'M5', cssClass: 'qdx_theme3-3' },
-        'images,msg': { theme: 'T13', code: 'M3', cssClass: 'qdx_theme3-4' },
-        'images,msg,buttons': { theme: 'T14', code: 'M6', cssClass: 'qdx_theme3-5' },
-        'images,msg,buttons2': { theme: 'T15', code: 'M7', cssClass: 'qdx_theme3-6' }
-    },
-    STAR: {
-        'msg': { theme: 'T16', code: 'M8', cssClass: 'qdx_theme4-1' }
-    }
-};
 
 const InAppModule = ({
     config = {},
@@ -51,9 +29,7 @@ const InAppModule = ({
 
     const [previewData, setPreviewData] = useState(null);
     const [isValidForSave, setIsValidForSave] = useState(false);
-    const [showTodayModal, setShowTodayModal] = useState(false);
     const [showJsonModal, setShowJsonModal] = useState(false);
-    const [showLocationMenu, setShowLocationMenu] = useState(false);
 
     const { displayTypes, locations, loading, error } = useInAppData(config);
     const {
@@ -67,42 +43,12 @@ const InAppModule = ({
         setPreservedSettings
     } = useInAppSelections(onDataChange, loading);
 
+    // 초기 데이터 설정
     useEffect(() => {
         setInitialData(initialData);
     }, [initialData, loading]);
 
-    // 테마 계산 함수
-    const calculateTheme = (displayType, settings, buttons) => {
-        const showComponents = [];
-
-        if (settings.imageEnabled || (settings.images && settings.images.length > 0) || settings.imageUrl) {
-            showComponents.push('images');
-        }
-
-        if (settings.textEnabled || settings.titleContent || settings.bodyContent || 
-            (settings.msg && (settings.msg.title || settings.msg.text))) {
-            showComponents.push('msg');
-        }
-
-        const hasButtons = settings.buttonEnabled || (buttons && buttons.length > 0) || 
-                          (settings.buttons && settings.buttons.length > 0);
-        
-        if (hasButtons) {
-            const buttonCount = buttons?.length || settings.buttons?.length || 1;
-            showComponents.push(buttonCount >= 2 ? 'buttons2' : 'buttons');
-        }
-
-        const showKey = showComponents.join(',');
-        const themeInfo = THEME_MAPPING[displayType?.toUpperCase()]?.[showKey];
-
-        return {
-            theme: themeInfo?.theme || (displayType?.toUpperCase() === 'BOX' ? 'T4' : 'T1'),
-            code: themeInfo?.code || 'M1',
-            cssClass: themeInfo?.cssClass || (displayType?.toUpperCase() === 'BOX' ? 'qdx_theme2-1' : 'qdx_theme1-1'),
-            show: showComponents
-        };
-    };
-
+    // 기본 미리보기 데이터 설정
     useEffect(() => {
         if (!selections.displayType && !previewData) {
             setPreviewData(createDefaultPreviewData("BAR"));
@@ -111,294 +57,125 @@ const InAppModule = ({
 
     // 미리보기 데이터 처리
     useEffect(() => {
-        if (currentStep === 1 && selections.displayType) {
-            const userBasedData = {
-                display: selections.displayType.toLowerCase(),
-                template: 'M3',
-                code: 'M3',
-                location: 'TOP',
-                today: previewData?.today || 'N',
-                show: [],
-                images: [],
-                msg: {},
-                buttons: []
-            };
-
-            if (preservedSettings && (preservedSettings.titleContent || preservedSettings.bodyContent || 
-                preservedSettings.imageUrl || preservedSettings.images || 
-                (preservedSettings.buttons && preservedSettings.buttons.length > 0))) {
+        if (currentStep === 1) {
+            if (selections.displayType) {
+                const baseData = createDefaultPreviewData(selections.displayType);
                 
-                // 이미지 설정
-                if (preservedSettings.imageEnabled) {
-                    if (selections.displayType.toUpperCase() === 'SLIDE' && preservedSettings.images) {
-                        userBasedData.images = preservedSettings.images;
-                    } else if (preservedSettings.imageUrl) {
-                        userBasedData.images = [{
-                            seq: 1,
-                            url: preservedSettings.imageUrl,
-                            action: preservedSettings.clickAction === 'link' ? 'L' : '',
-                            linkUrl: preservedSettings.linkUrl || '',
-                            linkOpt: preservedSettings.linkTarget === 'new' ? 'B' : 'S'
-                        }];
-                    } else {
-                        userBasedData.images = [{
-                            seq: 1,
-                            url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhFjJgDxmK9CVk3XxTiitDyZLIOKJvtZNLrg&s",
-                            action: "",
-                            linkUrl: "",
-                            linkOpt: ""
-                        }];
-                    }
-                    userBasedData.show.push('images');
+                // 보존된 설정이 있으면 적용
+                if (preservedSettings && Object.keys(preservedSettings).some(key => preservedSettings[key])) {
+                    const updatedData = applyPreservedSettings(baseData, preservedSettings, selections.displayType);
+                    setPreviewData(updatedData);
                 } else {
-                    userBasedData.images = [{
-                        seq: 1,
-                        url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhFjJgDxmK9CVk3XxTiitDyZLIOKJvtZNLrg&s",
-                        action: "",
-                        linkUrl: "",
-                        linkOpt: ""
-                    }];
-                    userBasedData.show.push('images');
+                    setPreviewData(baseData);
                 }
-
-                // 텍스트 설정
-                if (preservedSettings.textEnabled) {
-                    userBasedData.msg = {
-                        title: preservedSettings.titleContent || '',
-                        text: preservedSettings.bodyContent || ''
-                    };
-                    if (!preservedSettings.titleContent && !preservedSettings.bodyContent) {
-                        userBasedData.msg = {
-                            title: `${selections.displayType?.toUpperCase()}형 미리보기`,
-                            text: "이것은 미리보기 내용입니다."
-                        };
-                    }
-                    userBasedData.show.push('msg');
-                } else {
-                    userBasedData.msg = {
-                        title: `${selections.displayType?.toUpperCase()}형 미리보기`,
-                        text: "이것은 미리보기 내용입니다."
-                    };
-                    userBasedData.show.push('msg');
-                }
-
-                // 버튼 설정
-                if (preservedSettings.buttonEnabled) {
-                    if (preservedSettings.buttons && preservedSettings.buttons.length > 0) {
-                        userBasedData.buttons = preservedSettings.buttons.map((btn, index) => ({
-                            seq: index + 1,
-                            text: btn.text || '',
-                            linkUrl: btn.url || '',
-                            linkOpt: btn.target === 'new' ? 'B' : 'S'
-                        }));
-                        userBasedData.show.push(preservedSettings.buttons.length >= 2 ? 'buttons2' : 'buttons');
-                    } else {
-                        userBasedData.buttons = [{
-                            seq: 1,
-                            text: "버튼 예시",
-                            linkUrl: "https://www.example.com",
-                            linkOpt: "S"
-                        }];
-                        userBasedData.show.push('buttons');
-                    }
-                }
-
-                setPreviewData(userBasedData);
             } else {
-                setPreviewData(createDefaultPreviewData(selections.displayType));
+                setPreviewData(createDefaultPreviewData('BAR'));
             }
-        } else if (currentStep === 2 && selections.displayType && !previewData) {
-            setPreviewData(createDefaultPreviewData(selections.displayType));
-        } else if (currentStep === 1 && !selections.displayType) {
-            setPreviewData(createDefaultPreviewData('BAR'));
         }
     }, [selections.displayType, currentStep, preservedSettings]);
 
-    // 미리보기 데이터 변경 처리
+    // 미리보기 데이터 변경 시 iframe에 전송
     useEffect(() => {
-        if (previewData && previewIframeRef.current?.contentWindow) {
-            previewIframeRef.current.contentWindow.postMessage({
+        if (previewData && previewIframeRef.current) {
+            previewIframeRef.current.postMessage({
                 type: 'show_preview',
                 data: previewData
-            }, '*');
+            });
         }
     }, [previewData]);
 
-    const handleIframeLoad = () => {
-        previewIframeRef.current.contentWindow.postMessage({
-            type: 'show_preview',
-            data: previewData
-        })
-    };
-
-    // iframe 메시지 처리
-    useEffect(() => {
-        const handleMessage = (e) => {
-            if (e.data.type === 'generate_popup_html') {
-                const html = generatePopupHTML(e.data.messageId, e.data.data);
-                previewIframeRef.current.contentWindow.postMessage({
-                    type: 'popup_html_generated',
-                    html: html
-                }, '*');
-            } else if (e.data.type === 'today_option_changed') {
-                setPreviewData(prev => ({
-                    ...prev,
-                    today: e.data.checked ? 'Y' : 'N'
-                }));
-            }
-        };
-
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
-    }, []);
-
-    const getHeaderIcon = () => {
-        return currentStep === 1 ? <DisplayIcon /> : <ImageIcon />;
-    };
-
-    // 설정 데이터 변경 처리
-    const handleSettingsDataChange = (jsonData) => {
-        const settings = {
-            imageEnabled: jsonData.images && jsonData.images.length > 0,
-            imageUrl: jsonData.images?.[0]?.url,
-            images: jsonData.images,
-            textEnabled: jsonData.msg && (jsonData.msg.title || jsonData.msg.text),
-            titleContent: jsonData.msg?.title,
-            bodyContent: jsonData.msg?.text,
-            buttonEnabled: jsonData.buttons && jsonData.buttons.length > 0,
-            location: jsonData.location || 'TOP'
-        };
-
-        const buttons = jsonData.buttons || [];
-        const themeInfo = calculateTheme(selections.displayType, settings, buttons);
-        const basePreviewData = previewData || createDefaultPreviewData(selections.displayType);
-
-        const validatedData = {
-            ...basePreviewData,
-            ...jsonData,
-            display: selections.displayType || 'BOX',
-            code: themeInfo.code,
-            cssClass: themeInfo.cssClass,
-            show: themeInfo.show,
-            msg: {
-                title: jsonData.msg?.title || "",
-                text: jsonData.msg?.text || ""
-            },
-            buttons: jsonData.buttons?.map(btn => ({
-                ...btn,
-                text: btn.text || "",
-                linkUrl: btn.linkUrl || "",
-                linkOpt: btn.linkOpt || ""
-            })) || [],
-            images: jsonData.images?.map(img => ({
-                ...img,
-                url: img.url || "",
-                action: img.action || "",
-                linkUrl: img.linkUrl || "",
-                linkOpt: img.linkOpt || ""
-            })) || []
-        };
-
-        setPreviewData(validatedData);
-    };
-
-    const handleValidationChange = (isValid) => {
-        setIsValidForSave(isValid);
-    };
-
-    // JSON 형식 변환
-    const convertToNewJsonFormat = (originalData) => {
-        const settings = settingsRef.current?.getSettingsData?.() || {};
-        const buttons = settingsRef.current?.getButtonsData?.() || [];
-        const themeInfo = calculateTheme(selections.displayType, settings, buttons);
-
-        const newFormat = {
-            display: selections.displayType || 'BOX',
-            theme: themeInfo.theme,
-            show: themeInfo.show,
-            location: settings.location || 'TOP',
-            images: [],
-            msg: {},
-            today: originalData?.today || 'N',
-            buttons: []
-        };
-
-        // 이미지 데이터 변환
-        if (settings.imageEnabled) {
-            if (selections.displayType?.toUpperCase() === 'SLIDE' && settings.images && Array.isArray(settings.images)) {
-                newFormat.images = settings.images
-                    .filter(img => img.url && img.url.trim())
-                    .map((img, index) => ({
-                        seq: index + 1,
-                        url: img.url,
-                        action: img.action === 'link' ? 'L' : '',
-                        linkUrl: img.action === 'link' ? (img.linkUrl || '') : '',
-                        linkOpt: img.linkTarget === 'new' ? 'B' : 'S'
-                    }));
-            } else if (settings.imageUrl) {
-                newFormat.images.push({
+    // 보존된 설정 적용
+    const applyPreservedSettings = (baseData, preserved, displayType) => {
+        const data = { ...baseData };
+        
+        // 이미지 설정
+        if (preserved.imageEnabled) {
+            if (displayType?.toUpperCase() === 'SLIDE' && preserved.images) {
+                data.images = preserved.images;
+            } else if (preserved.imageUrl) {
+                data.images = [{
                     seq: 1,
-                    url: settings.imageUrl,
-                    action: settings.clickAction === 'link' ? 'L' : 'N',
-                    linkUrl: settings.linkUrl || '',
-                    linkOpt: settings.linkTarget === 'new' ? 'B' : 'S'
-                });
+                    url: preserved.imageUrl,
+                    action: preserved.clickAction === 'link' ? 'L' : '',
+                    linkUrl: preserved.linkUrl || '',
+                    linkOpt: preserved.linkTarget === 'new' ? 'B' : 'S'
+                }];
             }
+            if (!data.show.includes('images')) data.show.push('images');
         }
 
-        // 메시지 데이터 변환
-        if (settings.textEnabled) {
-            newFormat.msg = {
-                title: settings.titleContent || '',
-                text: settings.bodyContent || ''
+        // 텍스트 설정
+        if (preserved.textEnabled) {
+            data.msg = {
+                title: preserved.titleContent || `${displayType?.toUpperCase()}형 미리보기`,
+                text: preserved.bodyContent || "이것은 미리보기 내용입니다."
             };
+            if (!data.show.includes('msg')) data.show.push('msg');
         }
 
-        // 버튼 데이터 변환
-        if (settings.buttonEnabled && buttons.length > 0) {
-            newFormat.buttons = buttons.map((btn, index) => ({
+        // 버튼 설정
+        if (preserved.buttonEnabled && preserved.buttons && preserved.buttons.length > 0) {
+            data.buttons = preserved.buttons.map((btn, index) => ({
                 seq: index + 1,
                 text: btn.text || '',
                 linkUrl: btn.url || '',
                 linkOpt: btn.target === 'new' ? 'B' : 'S'
             }));
+            data.show.push(preserved.buttons.length >= 2 ? 'buttons2' : 'buttons');
         }
 
-        return newFormat;
+        return data;
     };
 
-    // 위치 변경 처리
-    const handleLocationChange = (newLocation) => {
-        setPreviewData(prev => ({
-            ...prev,
-            location: newLocation
-        }));
-        setShowLocationMenu(false);
+    // iframe 메시지 핸들러
+    const handleIframeMessage = (e) => {
+        if (e.data.type === 'generate_popup_html') {
+            const html = generatePopupHTML(e.data.messageId, e.data.data);
+            previewIframeRef.current?.postMessage({
+                type: 'popup_html_generated',
+                html: html
+            });
+        } else if (e.data.type === 'today_option_changed') {
+            setPreviewData(prev => ({
+                ...prev,
+                today: e.data.checked ? 'Y' : 'N'
+            }));
+        }
     };
 
-    // 외부 클릭 시 위치 메뉴 닫기
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (showLocationMenu && !event.target.closest('[data-location-menu]')) {
-                setShowLocationMenu(false);
-            }
+    // 설정 데이터 변경 처리
+    const handleSettingsDataChange = (jsonData) => {
+        const settings = settingsRef.current?.getSettingsData?.() || {};
+        const buttons = settingsRef.current?.getButtonsData?.() || [];
+        const themeInfo = calculateTheme(selections.displayType, settings, buttons);
+        
+        const validatedData = {
+            ...jsonData,
+            display: selections.displayType || 'BOX',
+            code: themeInfo.code,
+            cssClass: themeInfo.cssClass,
+            show: themeInfo.show
         };
 
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [showLocationMenu]);
+        setPreviewData(validatedData);
+    };
 
-    // JSON 복사 처리
-    const handleCopyJson = () => {
-        const jsonForCopy = (currentStep === 2 && settingsRef.current) 
-            ? convertToNewJsonFormat(previewData) 
-            : previewData;
-        
-        const jsonString = JSON.stringify(jsonForCopy, null, 2);
-        navigator.clipboard.writeText(jsonString).then(() => {
-            alert('JSON이 클립보드에 복사되었습니다!');
-            setShowJsonModal(false);
-        });
+    // JSON 형식 변환
+    const convertToNewJsonFormat = () => {
+        const settings = settingsRef.current?.getSettingsData?.() || {};
+        const buttons = settingsRef.current?.getButtonsData?.() || [];
+        const themeInfo = calculateTheme(selections.displayType, settings, buttons);
+
+        return {
+            display: selections.displayType || 'BOX',
+            theme: themeInfo.theme,
+            show: themeInfo.show,
+            location: settings.location || 'TOP',
+            images: settings.images || [],
+            msg: settings.msg || {},
+            today: previewData?.today || 'N',
+            buttons: buttons
+        };
     };
 
     // 제출/저장 처리
@@ -427,144 +204,13 @@ const InAppModule = ({
             const currentSettings = settingsRef.current.getSettingsData?.();
             const currentButtons = settingsRef.current.getButtonsData?.();
             
-            const preservedData = {
-                titleContent: currentSettings?.titleContent || '',
-                bodyContent: currentSettings?.bodyContent || '',
-                imageUrl: currentSettings?.imageUrl || '',
-                linkUrl: currentSettings?.linkUrl || '',
-                clickAction: currentSettings?.clickAction || '',
-                linkTarget: currentSettings?.linkTarget || 'current',
-                textEnabled: currentSettings?.textEnabled || false,
-                imageEnabled: currentSettings?.imageEnabled || false,
-                buttonEnabled: currentSettings?.buttonEnabled || false,
+            setPreservedSettings({
+                ...currentSettings,
                 buttons: currentButtons || []
-            };
-
-            if (selections.displayType === 'SLIDE' || selections.displayType === 'slide') {
-                if (currentSettings?.images && Array.isArray(currentSettings.images)) {
-                    preservedData.images = currentSettings.images;
-                } else if (previewData?.images && Array.isArray(previewData.images)) {
-                    preservedData.images = previewData.images.map((img, index) => ({
-                        id: index + 1,
-                        url: img.url || '',
-                        action: img.action === 'L' ? 'link' : '',
-                        linkUrl: img.linkUrl || '',
-                        linkTarget: img.linkOpt === 'B' ? 'new' : 'current'
-                    }));
-                }
-            }
-
-            setPreservedSettings(preservedData);
+            });
         }
         
         handleBack();
-    };
-
-    // 미리보기 컨트롤 버튼 렌더링
-    const renderPreviewControls = () => {
-        if (currentStep !== 1 && currentStep !== 2) return null;
-
-        return (
-            <PreviewControlsArea>
-                <PreviewControlButton 
-                    className="today-check"
-                    active={previewData?.today === 'Y'}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setPreviewData(prev => ({
-                            ...prev,
-                            today: prev.today === 'Y' ? 'N' : 'Y'
-                        }));
-                    }}
-                >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M9 12l2 2 4-4"/>
-                        <circle cx="12" cy="12" r="10"/>
-                    </svg>
-                    오늘하루 안보기
-                </PreviewControlButton>
-                
-                <PreviewControlButton 
-                    className="json-view"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setShowJsonModal(true);
-                    }}
-                >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14,2 14,8 20,8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <polyline points="10,9 9,9 8,9"/>
-                    </svg>
-                    JSON 보기
-                </PreviewControlButton>
-                
-                <div style={{ position: 'relative' }} data-location-menu>
-                    <PreviewControlButton
-                        className="location-btn"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            setShowLocationMenu(!showLocationMenu);
-                        }}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                            <circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        {previewData?.location || 'TOP'}
-                    </PreviewControlButton>
-                    
-                    {showLocationMenu && (
-                        <LocationDropdown>
-                            {['TOP', 'MID', 'BOT'].map(location => (
-                                <button
-                                    key={location}
-                                    className={previewData?.location === location ? 'active' : ''}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        handleLocationChange(location);
-                                    }}
-                                >
-                                    {location === 'TOP' ? '상단 (TOP)' : location === 'MID' ? '중앙 (MID)' : '하단 (BOT)'}
-                                </button>
-                            ))}
-                        </LocationDropdown>
-                    )}
-                </div>
-            </PreviewControlsArea>
-        );
-    };
-
-    // 메인 콘텐츠 렌더링
-    const renderContent = () => {
-        if (currentStep === 2 && selections.displayType) {
-            return (
-                <UnifiedSettings
-                    ref={settingsRef}
-                    displayType={selections.displayType}
-                    onDataChange={handleSettingsDataChange}
-                    onValidationChange={handleValidationChange}
-                    preservedSettings={preservedSettings}
-                    onSettingsPreserve={setPreservedSettings}
-                />
-            );
-        }
-
-        if (currentStep === 1) {
-            const items = getCurrentItems(currentStep, displayTypes, locations, selections);
-            return (
-                <SelectionGridComponent
-                    items={items}
-                    currentStep={currentStep}
-                    selections={selections}
-                    onItemSelect={handleItemSelect}
-                />
-            );
-        }
-
-        return null;
     };
 
     // 로딩 상태
@@ -609,7 +255,7 @@ const InAppModule = ({
                 <ContentSection>
                     <Header>
                         <HeaderIcon>
-                            {getHeaderIcon()}
+                            {currentStep === 1 ? <DisplayIcon /> : <ImageIcon />}
                         </HeaderIcon>
                         <div style={{ flex: 1 }}>
                             <StepTitle>
@@ -632,7 +278,23 @@ const InAppModule = ({
                     </Header>
 
                     <ContentArea>
-                        {renderContent()}
+                        {currentStep === 1 ? (
+                            <SelectionGridComponent
+                                items={getCurrentItems(currentStep, displayTypes, locations, selections)}
+                                currentStep={currentStep}
+                                selections={selections}
+                                onItemSelect={handleItemSelect}
+                            />
+                        ) : (
+                            <UnifiedSettings
+                                ref={settingsRef}
+                                displayType={selections.displayType}
+                                onDataChange={handleSettingsDataChange}
+                                onValidationChange={setIsValidForSave}
+                                preservedSettings={preservedSettings}
+                                onSettingsPreserve={setPreservedSettings}
+                            />
+                        )}
                     </ContentArea>
 
                     <NavigationArea>
@@ -658,404 +320,36 @@ const InAppModule = ({
                 </ContentSection>
 
                 <PreviewSection>
-                    {renderPreviewControls()}
-                    <PreviewIframeContainer>
-                        <iframe
-                            ref={previewIframeRef}
-                            onLoad={handleIframeLoad}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                border: 'none',
-                                background: 'transparent',
-                                minHeight: '400px'
-                            }}
-                            srcDoc={`
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>QDX Preview</title>
-    <link rel="stylesheet" href="https://quadmax.co.kr/qdx/css/qdx_popup.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&display=swap" rel="stylesheet">
-    <style>
-        /* 기본 CSS 오버라이드 - Pretendard 폰트 강제 적용 해제 */
-        #qdx_popup_wrap * {
-            font-family: inherit !important;
-        }
-        
-        /* 텍스트 요소의 폰트 스타일 강제 적용 */
-        .qdx_text h2 *, .qdx_text p *, .qdx_text .qdx_text_content *, 
-        .qdx_text h2, .qdx_text p, .qdx_text .qdx_text_content {
-            font-family: inherit !important;
-        }
-        
-        /* 특정 폰트 클래스 강제 적용 */
-        [style*="Nanum Gothic"] *, [style*="Nanum Gothic"] {
-            font-family: 'Nanum Gothic', sans-serif !important;
-        }
-        
-        [style*="Nanum Myeongjo"] *, [style*="Nanum Myeongjo"] {
-            font-family: 'Nanum Myeongjo', serif !important;
-        }
-        
-        [style*="Nanum Pen Script"] *, [style*="Nanum Pen Script"] {
-            font-family: 'Nanum Pen Script', cursive !important;
-        }
-        
-        [style*="Nanum Brush Script"] *, [style*="Nanum Brush Script"] {
-            font-family: 'Nanum Brush Script', cursive !important;
-        }
-        
-        /* 모든 텍스트 요소에 사용자 설정 폰트 적용 */
-        .qdx_text span[style*="font-family"] {
-            font-family: inherit !important;
-        }
-        
-        /* 기본 폰트 설정 */
-        .qdx_text {
-            font-family: 'Nanum Gothic', sans-serif !important;
-        }
-        
-        /* 동적으로 적용되는 폰트 스타일 우선순위 보장 */
-        .qdx_text [style] {
-            font-family: inherit !important;
-        }
-    </style>
-</head>
-<body>
-    <script>
-        let localQdx = null;
-        let qdxReady = false;
-        let pendingPreview = null;
-        
-        function initLocalQdx() {
-            // QdxRenderer를 인라인으로 정의
-            window.QdxRenderer = {
-                showMsg: (id, data) => {
-                    window.parent.postMessage({
-                        type: 'generate_popup_html',
-                        messageId: id,
-                        data: data
-                    }, '*');
-                }
-            };
-            
-            localQdx = window.QdxRenderer;
-            qdxReady = true;
-            
-            if (pendingPreview) {
-                showPreview(pendingPreview);
-                pendingPreview = null;
-            }
-        }
-        
-        function initSwiper(containerId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-
-            if (!window.Swiper) {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';
-                script.onload = () => {
-                    const css = document.createElement('link');
-                    css.rel = 'stylesheet';
-                    css.href = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';
-                    document.head.appendChild(css);
+                    {(currentStep === 1 || currentStep === 2) && (
+                        <PreviewControls
+                            previewData={previewData}
+                            onTodayToggle={() => setPreviewData(prev => ({
+                                ...prev,
+                                today: prev.today === 'Y' ? 'N' : 'Y'
+                            }))}
+                            onJsonView={() => setShowJsonModal(true)}
+                            onLocationChange={(location) => setPreviewData(prev => ({
+                                ...prev,
+                                location
+                            }))}
+                        />
+                    )}
                     
-                    setTimeout(() => {
-                        createSwiper(containerId);
-                    }, 100);
-                };
-                document.head.appendChild(script);
-            } else {
-                createSwiper(containerId);
-            }
-        }
-
-        function createSwiper(containerId) {
-            const swiper = new window.Swiper(\`#\${containerId}\`, {
-                slidesPerView: 1,
-                spaceBetween: 0,
-                loop: false,
-                autoplay: {
-                    delay: 3000,
-                    disableOnInteraction: false,
-                    pauseOnMouseEnter: true
-                },
-                navigation: {
-                    nextEl: \`#\${containerId} .swiper-button-next\`,
-                    prevEl: \`#\${containerId} .swiper-button-prev\`,
-                },
-                pagination: {
-                    el: \`#\${containerId} .swiper-pagination\`,
-                    type: 'custom',
-                    renderCustom: function (swiper, current, total) {
-                        return \`<span class="swiper-pagination-current">\${current}</span> / <span class="swiper-pagination-total">\${total}</span>\`;
-                    }
-                }
-            });
-            
-            return swiper;
-        }
-        
-        function showPreview(data) {
-            if (!qdxReady || !localQdx) {
-                pendingPreview = data;
-                return;
-            }
-            localQdx.showMsg('TEST_' + Date.now(), data);
-        }
-        
-        window.addEventListener('message', (e) => {
-            if (e.data.type === 'show_preview') {
-                showPreview(e.data.data);
-            } else if (e.data.type === 'popup_html_generated') {
-                document.getElementById('qdx_popup_wrap')?.remove();
-                document.body.insertAdjacentHTML('beforeend', e.data.html);
-                adjustPreviewPosition();
-                
-                setTimeout(() => {
-                    const popup = document.getElementById('qdx_popup_wrap');
-                    if (popup) {
-                        applyFontStyles(popup);
-                        
-                        // zoom 재적용 (텍스트 토글 시에도 유지)
-                        const popupBox = popup.querySelector('.qdx_popup_box');
-                        if (popupBox) {
-                            popupBox.style.zoom = '0.9';
-                        }
-                        
-                        const slideElement = popup.querySelector('#qdx_slide');
-                        if (slideElement) {
-                            setTimeout(() => {
-                                initSwiper('qdx_slide');
-                            }, 200);
-                        }
-                    }
-                }, 100);
-                
-                const todayCheckbox = document.querySelector('input[name="today"]');
-                if (todayCheckbox) {
-                    todayCheckbox.addEventListener('change', (event) => {
-                        window.parent.postMessage({
-                            type: 'today_option_changed',
-                            checked: event.target.checked
-                        }, '*');
-                    });
-                }
-            }
-        });
-        
-        function adjustPreviewPosition() {
-            const popup = document.getElementById('qdx_popup_wrap');
-            if (!popup) return;
-            
-            popup.style.background = '#fafafa';
-            applyFontStyles(popup);
-            
-            // 전체 팝업 박스에 고정 zoom 적용
-            const popupBox = popup.querySelector('.qdx_popup_box');
-            if (popupBox) {
-               popupBox.style.zoom = '0.9';  // 0.9로 조정
-            }
-            
-            const contElement = popup.querySelector('.qdx_cont');
-            if (contElement) {
-                contElement.style.boxShadow = 'rgba(0, 0, 0, 0.2) 8px 8px 24px 8px';
-                contElement.style.transform = 'none';
-            }
-        }
-        
-        function applyFontStyles(container) {
-            const textContainers = container.querySelectorAll('.qdx_text');
-            
-            textContainers.forEach((textContainer) => {
-                const allElements = textContainer.querySelectorAll('*');
-                allElements.forEach((element) => {
-                    const style = element.getAttribute('style');
-                    if (style) {
-                        const styleDeclarations = style.split(';').filter(decl => decl.trim());
-                        styleDeclarations.forEach(declaration => {
-                            const [property, value] = declaration.split(':').map(s => s.trim());
-                            if (property && value) {
-                                // 폰트 패밀리는 특히 강제로 적용
-                                if (property === 'font-family') {
-                                    element.style.setProperty(property, value, 'important');
-                                } else {
-                                    element.style.setProperty(property, value, 'important');
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-        }
-        
-        function selectStar(score) {
-            document.querySelectorAll('.qdx_startImg').forEach(star => {
-                star.classList.remove('qdx_on');
-            });
-            
-            for (let i = 1; i <= score; i++) {
-                const star = document.querySelector(\`.qdx_startImg[data-score="\${i}"]\`);
-                if (star) {
-                    star.classList.add('qdx_on');
-                }
-            }
-        }
-        
-        window.selectStar = selectStar;
-        
-        // 버튼 클릭 핸들러 추가
-        window.handleButtonClick = function(event, url, target) {
-            // 빈 URL이나 # 만 있는 경우 기본 동작 방지
-            if (!url || url === '#' || url.startsWith('#')) {
-                event.preventDefault();
-                console.log('Empty or hash-only URL, preventing navigation');
-                return false;
-            }
-            
-            // 정상적인 URL인 경우
-            if (url.startsWith('http://') || url.startsWith('https://')) {
-                // target에 따라 처리
-                if (target === '_blank') {
-                    window.open(url, '_blank');
-                } else {
-                    window.location.href = url;
-                }
-                event.preventDefault();
-                return false;
-            }
-            
-            // 상대 경로인 경우 기본 동작 방지
-            event.preventDefault();
-            console.log('Relative URL detected, preventing navigation:', url);
-            return false;
-        };
-        
-        // 이미지 클릭 핸들러 추가
-        window.handleImageClick = function(event, url, target) {
-            // 버튼 클릭과 동일한 로직 적용
-            return window.handleButtonClick(event, url, target);
-        };
-        
-        initLocalQdx();
-    </script>
-</body>
-</html>
-                            `}
-                            title="QDX Preview"
-                            sandbox="allow-scripts allow-same-origin allow-popups"
+                    <PreviewIframeContainer>
+                        <PreviewIframe
+                            ref={previewIframeRef}
+                            onMessage={handleIframeMessage}
                         />
                     </PreviewIframeContainer>
                 </PreviewSection>
             </ModuleWrapper>
 
-            {/* JSON 모달 */}
-            {showJsonModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000
-                }}>
-                    <div style={{
-                        background: 'white',
-                        borderRadius: '8px',
-                        padding: '24px',
-                        maxWidth: '600px',
-                        width: '90%',
-                        maxHeight: '80vh',
-                        overflow: 'auto'
-                    }}>
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '16px'
-                        }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
-                                JSON 데이터
-                            </h3>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        handleCopyJson();
-                                    }}
-                                    style={{
-                                        padding: '8px 16px',
-                                        background: '#3b82f6',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '6px',
-                                        fontSize: '13px',
-                                        fontWeight: '500',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px'
-                                    }}
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                                    </svg>
-                                    복사
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setShowJsonModal(false);
-                                    }}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        fontSize: '20px',
-                                        cursor: 'pointer',
-                                        color: '#6b7280'
-                                    }}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        </div>
-                        <pre style={{
-                            background: '#f8f9fa',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '6px',
-                            padding: '16px',
-                            fontSize: '12px',
-                            fontFamily: 'Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                            color: '#1f2937',
-                            overflow: 'auto',
-                            lineHeight: '1.5',
-                            margin: 0,
-                            whiteSpace: 'pre-wrap',
-                            maxHeight: '400px'
-                        }}>
-                            {(() => {
-                                const jsonToShow = (currentStep === 2 && settingsRef.current) 
-                                    ? convertToNewJsonFormat(previewData) 
-                                    : previewData;
-                                
-                                return jsonToShow ? JSON.stringify(jsonToShow, null, 2) : '데이터가 없습니다.';
-                            })()}
-                        </pre>
-                    </div>
-                </div>
-            )}
+            <JsonModal
+                show={showJsonModal}
+                jsonData={currentStep === 2 && settingsRef.current ? convertToNewJsonFormat() : previewData}
+                onClose={() => setShowJsonModal(false)}
+                onCopy={() => setShowJsonModal(false)}
+            />
         </div>
     );
 };

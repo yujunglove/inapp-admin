@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { loadInAppData, createApiConfig } from '../services/inAppApi';
+import { loadInAppData, createApiConfig } from '../services/inAppService';
 import { HARDCODED_DATA } from '../config/appConfig';
 
 export const useInAppData = (config) => {

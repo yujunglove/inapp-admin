@@ -1,17 +1,5 @@
 import { getDisplayConfig } from '../config/appConfig';
 
-function stripHtmlTags(html) {
-    if (!html) return '';
-    
-    if (typeof document !== 'undefined') {
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        return tempDiv.textContent || tempDiv.innerText || '';
-    }
-    
-    return html.replace(/<[^>]*>/g, '').trim();
-}
-
 export const generateInAppJsonData = (displayType, settings, buttons = []) => {
     if (!displayType) {
         displayType = 'BOX';
@@ -102,51 +90,4 @@ export const generateInAppJsonData = (displayType, settings, buttons = []) => {
     }
 
     return jsonData;
-};
-
-export const validateJsonData = (jsonData) => {
-    const errors = [];
-
-    if (!jsonData.display) {
-        errors.push('표시형태(display)가 없습니다.');
-    }
-
-    if (!Array.isArray(jsonData.show)) {
-        errors.push('표시 항목(show)이 배열이 아닙니다.');
-    }
-
-    if (jsonData.show?.includes('images')) {
-        if (!Array.isArray(jsonData.images) || jsonData.images.length === 0) {
-            errors.push('이미지가 활성화되었지만 이미지 데이터가 없습니다.');
-        } else {
-            jsonData.images.forEach((img, index) => {
-                if (!img.url) {
-                    errors.push(`이미지 ${index + 1}의 URL이 없습니다.`);
-                }
-            });
-        }
-    }
-
-    if (jsonData.show?.includes('msg')) {
-        if (!jsonData.msg || (typeof jsonData.msg !== 'object')) {
-            errors.push('메시지가 활성화되었지만 메시지 데이터가 없습니다.');
-        }
-    }
-
-    if (jsonData.show?.includes('buttons')) {
-        if (!Array.isArray(jsonData.buttons) || jsonData.buttons.length === 0) {
-            errors.push('버튼이 활성화되었지만 버튼 데이터가 없습니다.');
-        } else {
-            jsonData.buttons.forEach((btn, index) => {
-                if (!btn.text) {
-                    errors.push(`버튼 ${index + 1}의 텍스트가 없습니다.`);
-                }
-            });
-        }
-    }
-
-    return {
-        isValid: errors.length === 0,
-        errors
-    };
 };
