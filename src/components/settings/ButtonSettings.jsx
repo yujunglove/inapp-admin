@@ -45,7 +45,7 @@ export const ButtonSettings = ({
                 <div>
                     <h4 style={{
                         margin: 0,
-                        fontSize: '18px',
+                        fontSize: '14px',
                         fontWeight: 700,
                         color: enabled ? '#0e636e' : '#8ba7b3',
                         letterSpacing: '-0.5px',
@@ -55,7 +55,7 @@ export const ButtonSettings = ({
                     </h4>
                     <p style={{
                         margin: '7px 0 0 0',
-                        fontSize: '15px',
+                        fontSize: '12px',
                         color: enabled ? '#4a4e56' : '#b0b8c2',
                         fontWeight: 400,
                         opacity: enabled ? 0.92 : 0.7,
@@ -78,8 +78,31 @@ export const ButtonSettings = ({
                 <div style={{
                     padding: '22px 18px 18px 18px',
                     background: '#fff',
-                    borderRadius: '0 0 18px 18px'
-                }}>
+                    borderRadius: '0 0 18px 18px',
+                    maxHeight: '500px',
+                    overflowY: 'auto',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
+                }}
+                className="button-settings-content"
+                >
+                    <style>
+                        {`
+                            .button-settings-content::-webkit-scrollbar {
+                                width: 6px;
+                            }
+                            .button-settings-content::-webkit-scrollbar-track {
+                                background: transparent;
+                            }
+                            .button-settings-content::-webkit-scrollbar-thumb {
+                                background: rgba(156, 163, 175, 0.5);
+                                border-radius: 3px;
+                            }
+                            .button-settings-content::-webkit-scrollbar-thumb:hover {
+                                background: rgba(156, 163, 175, 0.8);
+                            }
+                        `}
+                    </style>
                     {buttons.map((button, index) => (
                         <div key={button.id} style={{
                             border: '1px solid #e5e7eb',
@@ -122,7 +145,7 @@ export const ButtonSettings = ({
                                 alignItems: 'center',
                                 marginBottom: '16px'
                             }}>
-                                <h6 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#4a4e56' }}>
+                                <h6 style={{ margin: 0, fontSize: '13px', fontWeight: '600', color: '#4a4e56' }}>
                                     버튼 {index + 1}
                                 </h6>
                             </div>
@@ -130,7 +153,7 @@ export const ButtonSettings = ({
                                 <label style={{
                                     display: 'block',
                                     marginBottom: '6px',
-                                    fontSize: '14px',
+                                    fontSize: '12px',
                                     fontWeight: '500'
                                 }}>
                                     버튼 텍스트
@@ -158,7 +181,7 @@ export const ButtonSettings = ({
                                     justifyContent: 'space-between',
                                     marginBottom: '6px'
                                 }}>
-                                    <label style={{ fontSize: '14px', fontWeight: '500' }}>링크 URL</label>
+                                    <label style={{ fontSize: '12px', fontWeight: '500' }}>링크 URL</label>
                                     <button
                                         type="button"
                                         onClick={(e) => {
@@ -275,7 +298,7 @@ export const ButtonSettings = ({
                     borderRadius: '0 0 18px 18px',
                     textAlign: 'center',
                     color: '#adbcc6',
-                    fontSize: '15px',
+                    fontSize: '12px',
                     fontWeight: 400,
                     letterSpacing: '-0.2px'
                 }}>

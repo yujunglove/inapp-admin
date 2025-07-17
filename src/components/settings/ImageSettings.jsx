@@ -111,7 +111,7 @@ export const ImageSettings = ({
                 <div>
                     <h4 style={{
                         margin: 0,
-                        fontSize: '18px',
+                        fontSize: '14px',
                         fontWeight: 700,
                         color: enabled ? '#0e636e' : '#8ba7b3',
                         letterSpacing: '-0.5px',
@@ -121,7 +121,7 @@ export const ImageSettings = ({
                     </h4>
                     <p style={{
                         margin: '7px 0 0 0',
-                        fontSize: '15px',
+                        fontSize: '12px',
                         color: enabled ? '#4a4e56' : '#b0b8c2',
                         fontWeight: 400,
                         opacity: enabled ? 0.92 : 0.72,
@@ -184,14 +184,14 @@ export const ImageSettings = ({
                                         alignItems: 'center',
                                         marginBottom: '16px'
                                     }}>
-                                        <h6 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#4a4e56' }}>
+                                        <h6 style={{ margin: 0, fontSize: '13px', fontWeight: '600', color: '#4a4e56' }}>
                                             이미지 {index + 1}
                                         </h6>
                                     </div>
 
                                     <div style={{ marginBottom: '12px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                            <label style={{ fontWeight: '500', margin: 0, fontSize: '14px' }}>이미지 URL</label>
+                                            <label style={{ fontWeight: '500', margin: 0, fontSize: '12px' }}>이미지 URL</label>
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
@@ -259,7 +259,7 @@ export const ImageSettings = ({
                                     </div>
 
                                     <div style={{ marginBottom: '12px' }}>
-                                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>클릭동작</label>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '12px' }}>클릭동작</label>
                                         <CustomSelect
                                             value={image.action}
                                             onChange={value => updateImage(image.id, 'action', value)}
@@ -553,7 +553,7 @@ export const ImageSettings = ({
                     borderRadius: '0 0 18px 18px',
                     textAlign: 'center',
                     color: '#adbcc6',
-                    fontSize: '15px',
+                    fontSize: '12px',
                     fontWeight: 400,
                     letterSpacing: '-0.2px'
                 }}>

@@ -5,7 +5,8 @@ export const ModuleWrapper = styled.div`
     display: flex;
     flex-direction: row;
     width: 100%;
-    height: 100%;
+    height: 100vh;
+    min-height: 900px;
     background: #ffffff;
 `;
 
@@ -14,7 +15,8 @@ export const ContentSection = styled.div.attrs({
 })`
     display: flex;
     flex-direction: column;
-    width: 55%;
+    width: 70%;
+    height: 100%;
     border-right: 1px solid #e9e9e9;
     background: #ffffff;
     overflow: hidden;  /* 자식 요소의 스크롤바가 밖으로 나오지 않도록 */
@@ -24,10 +26,10 @@ export const ContentArea = styled.div.attrs({
     className: 'content-area'
 })`
     padding: 24px;
-    flex: 1;  /* 남은 공간 모두 차지 */
-    overflow-y: overlay;  /* 스크롤바가 콘텐츠 위에 오버레이 */
-    scrollbar-gutter: stable;  /* 스크롤바 공간 항상 확보 */
-    min-height: 0;  /* flex에서 overflow가 제대로 작동하도록 */
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    min-height: 0;
     
     /* 스크롤바 스타일링 */
     &::-webkit-scrollbar {
@@ -97,7 +99,7 @@ export const HeaderIcon = styled.div.attrs({
 export const StepTitle = styled.h2.attrs({
     className: 'step-title'
 })`
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #1f2937;
     margin: 0;
@@ -312,10 +314,130 @@ export const PreviewSection = styled.div.attrs({
     className: 'preview-section'
 })`
     width: 60%;
-    background: #fafafa; /* 다시 흰색으로 */
+    height: 100%;
+    min-height: 900px;
+    background: #fafafa;
     padding: 14px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: relative; /* 토스트 위치를 위한 relative 설정 */
+    position: relative;
+`;
+
+export const PreviewControlsArea = styled.div.attrs({
+    className: 'preview-controls-area'
+})`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 16px;
+    background: #ffffff;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    gap: 12px;
+    flex-shrink: 0;
+`;
+
+export const PreviewControlButton = styled.button.attrs({
+    className: 'preview-control-button'
+})`
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    &.today-check {
+        background: ${props => props.active ? '#10b981' : '#f3f4f6'};
+        color: ${props => props.active ? 'white' : '#374151'};
+        border: 1px solid ${props => props.active ? '#10b981' : '#d1d5db'};
+        
+        &:hover {
+            background: ${props => props.active ? '#059669' : '#e5e7eb'};
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+    }
+    
+    &.json-view {
+        background: #fcad27;
+        color: white;
+        
+        &:hover {
+            background: #e09820;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(252, 173, 39, 0.3);
+        }
+    }
+    
+    &.location-btn {
+        background: #169DAF;
+        color: white;
+        position: relative;
+        
+        &:hover {
+            background: #127a8a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 157, 175, 0.3);
+        }
+        
+        svg {
+            width: 14px;
+            height: 14px;
+        }
+    }
+`;
+
+export const LocationDropdown = styled.div.attrs({
+    className: 'location-dropdown'
+})`
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    overflow: hidden;
+    z-index: 1000;
+    min-width: 120px;
+    
+    button {
+        width: 100%;
+        padding: 8px 12px;
+        border: none;
+        background: transparent;
+        font-size: 12px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.15s ease;
+        color: #374151;
+        
+        &.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        &:hover:not(.active) {
+            background: #f3f4f6;
+        }
+    }
+`;
+
+export const PreviewIframeContainer = styled.div.attrs({
+    className: 'preview-iframe-container'
+})`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fafafa;
+    border-radius: 8px;
 `;

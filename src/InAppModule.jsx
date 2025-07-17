@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     ModuleWrapper, ContentSection, Header, HeaderIcon, StepTitle, StepNumber,
-    ContentArea, NavigationArea, BackButton, NextButton, PreviewSection} from './styles/StyledComponents';
+    ContentArea, NavigationArea, BackButton, NextButton, PreviewSection, 
+    PreviewControlsArea, PreviewControlButton, LocationDropdown, PreviewIframeContainer} from './styles/StyledComponents';
 import {BackIcon, NextIcon, DisplayIcon, ImageIcon} from './components/Icons';
 import SelectionGridComponent from './components/SelectionGrid';
 import { UnifiedSettings } from './components/UnifiedSettings';
@@ -10,7 +11,6 @@ import {getCurrentItems, getCurrentStepTitle, getCurrentStepNumber, isNextEnable
 import { InAppService } from './services/inAppService';
 import { createDefaultPreviewData } from './config/dbMapping';
 import { generatePopupHTML } from './components/popupGenerator';
-import Draggable from 'react-draggable';
 
 const THEME_MAPPING = {
     BAR: {
@@ -460,215 +460,80 @@ const InAppModule = ({
         handleBack();
     };
 
-    // 미리보기 버튼 렌더링
-    const renderPreviewButtons = () => {
+    // 미리보기 컨트롤 버튼 렌더링
+    const renderPreviewControls = () => {
         if (currentStep !== 1 && currentStep !== 2) return null;
 
-        // react-draggable 라이브러리 사용
         return (
-            <Draggable
-                handle=".drag-handle"
-                defaultPosition={{x: 0, y: 20}}
-                bounds="parent"
-            >
-                <div 
-                    className="draggable-control-panel"
-                    style={{
-                        position: 'absolute',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px',
-                        zIndex: 100,
-                        background: 'white',
-                        padding: '16px',
-                        paddingTop: '24px',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        border: '1px solid #e5e7eb',
-                        userSelect: 'none',
-                        transition: 'box-shadow 0.2s ease',
-                        width: '160px',
-                        right: '20px'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            <PreviewControlsArea>
+                <PreviewControlButton 
+                    className="today-check"
+                    active={previewData?.today === 'Y'}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setPreviewData(prev => ({
+                            ...prev,
+                            today: prev.today === 'Y' ? 'N' : 'Y'
+                        }));
                     }}
                 >
-                    {/* 드래그 핸들 - 이 부분만 드래그 가능 */}
-                    <div 
-                        className="drag-handle"
-                        style={{
-                            position: 'absolute',
-                            top: '6px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: '40px',
-                            height: '4px',
-                            background: '#d1d5db',
-                            borderRadius: '2px',
-                            cursor: 'grab'
-                        }}
-                    />
-                    
-                    <label style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        color: '#374151',
-                        marginTop: '8px'
-                    }}>
-                        <input
-                            type="checkbox"
-                            checked={previewData?.today === 'Y'}
-                            onChange={(e) => {
-                                setPreviewData(prev => ({
-                                    ...prev,
-                                    today: e.target.checked ? 'Y' : 'N'
-                                }));
-                            }}
-                            style={{
-                                width: '14px',
-                                height: '14px',
-                                cursor: 'pointer'
-                            }}
-                        />
-                        오늘하루 안보기
-                    </label>
-                    
-                    <button
-                        type="button"
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 12l2 2 4-4"/>
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    오늘하루 안보기
+                </PreviewControlButton>
+                
+                <PreviewControlButton 
+                    className="json-view"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setShowJsonModal(true);
+                    }}
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10,9 9,9 8,9"/>
+                    </svg>
+                    JSON 보기
+                </PreviewControlButton>
+                
+                <div style={{ position: 'relative' }} data-location-menu>
+                    <PreviewControlButton
+                        className="location-btn"
                         onClick={(e) => {
                             e.preventDefault();
-                            setShowJsonModal(true);
-                        }}
-                        style={{
-                            padding: '8px 16px',
-                            background: '#fcad27',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            width: '100%',
-                            transition: 'all 0.2s ease',
-                            transform: 'translateY(0)',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.target.style.background = '#e09820';
-                            e.target.style.transform = 'translateY(-1px)';
-                            e.target.style.boxShadow = '0 4px 12px rgba(252, 173, 39, 0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.background = '#fcad27';
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = 'none';
+                            setShowLocationMenu(!showLocationMenu);
                         }}
                     >
-                        JSON 보기
-                    </button>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        {previewData?.location || 'TOP'}
+                    </PreviewControlButton>
                     
-                    <div style={{ position: 'relative' }} data-location-menu>
-                        <button
-                            type="button"
-                            title="위치 설정"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                setShowLocationMenu(!showLocationMenu);
-                            }}
-                            style={{
-                                padding: '8px 16px',
-                                background: '#169DAF',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                fontSize: '12px',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '6px',
-                                transition: 'all 0.2s ease',
-                                transform: 'translateY(0)',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.background = '#127a8a';
-                                e.target.style.transform = 'translateY(-1px)';
-                                e.target.style.boxShadow = '0 4px 12px rgba(22, 157, 175, 0.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.background = '#169DAF';
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = 'none';
-                            }}
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                <circle cx="12" cy="10" r="3"/>
-                            </svg>
-                             {previewData?.location || 'TOP'}
-                        </button>
-                        
-                        {showLocationMenu && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '100%',
-                                left: '0',
-                                right: '0',
-                                marginTop: '4px',
-                                background: 'white',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                overflow: 'hidden',
-                                zIndex: 1000
-                            }}>
-                                {['TOP', 'MID', 'BOT'].map(location => (
-                                    <button
-                                        type="button"
-                                        key={location}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleLocationChange(location);
-                                        }}
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px 12px',
-                                            background: previewData?.location === location ? '#3b82f6' : 'transparent',
-                                            color: previewData?.location === location ? 'white' : '#374151',
-                                            border: 'none',
-                                            fontSize: '12px',
-                                            cursor: 'pointer',
-                                            textAlign: 'left',
-                                            transition: 'all 0.15s ease'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (previewData?.location !== location) {
-                                                e.target.style.background = '#f3f4f6';
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (previewData?.location !== location) {
-                                                e.target.style.background = 'transparent';
-                                            }
-                                        }}
-                                    >
-                                        {location === 'TOP' ? '상단 (TOP)' : location === 'MID' ? '중앙 (MID)' : '하단 (BOT)'}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    {showLocationMenu && (
+                        <LocationDropdown>
+                            {['TOP', 'MID', 'BOT'].map(location => (
+                                <button
+                                    key={location}
+                                    className={previewData?.location === location ? 'active' : ''}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleLocationChange(location);
+                                    }}
+                                >
+                                    {location === 'TOP' ? '상단 (TOP)' : location === 'MID' ? '중앙 (MID)' : '하단 (BOT)'}
+                                </button>
+                            ))}
+                        </LocationDropdown>
+                    )}
                 </div>
-            </Draggable>
+            </PreviewControlsArea>
         );
     };
 
@@ -753,7 +618,7 @@ const InAppModule = ({
                             {currentStep === 2 && (
                                 <p style={{
                                     color: '#6b7280',
-                                    fontSize: '14px',
+                                    fontSize: '12px',
                                     margin: '4px 0 0 0',
                                     fontWeight: '400'
                                 }}>
@@ -766,11 +631,7 @@ const InAppModule = ({
                         </StepNumber>
                     </Header>
 
-                    <ContentArea style={{
-                        maxHeight: 'calc(100vh - 140px)',
-                        overflowY: 'auto',
-                        overflowX: 'hidden'
-                    }}>
+                    <ContentArea>
                         {renderContent()}
                     </ContentArea>
 
@@ -797,15 +658,8 @@ const InAppModule = ({
                 </ContentSection>
 
                 <PreviewSection>
-                    <div style={{
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden',
-                        position: 'relative'
-                    }}>
-                        {renderPreviewButtons()}
-                        
+                    {renderPreviewControls()}
+                    <PreviewIframeContainer>
                         <iframe
                             ref={previewIframeRef}
                             onLoad={handleIframeLoad}
@@ -1096,7 +950,7 @@ const InAppModule = ({
                             title="QDX Preview"
                             sandbox="allow-scripts allow-same-origin allow-popups"
                         />
-                    </div>
+                    </PreviewIframeContainer>
                 </PreviewSection>
             </ModuleWrapper>
 

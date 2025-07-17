@@ -606,7 +606,7 @@ div.toolbar select.toolbar-select.size-select {
                         marginBottom: '12px'
                     }}>
                         <label style={{
-                            fontSize: '16px',
+                            fontSize: '13px',
                             fontWeight: '600',
                             color: '#1f2937',
                             letterSpacing: '-0.025em'
@@ -615,7 +615,7 @@ div.toolbar select.toolbar-select.size-select {
                         </label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span style={{
-                                fontSize: '13px',
+                                fontSize: '11px',
                                 color: '#6b7280',
                                 padding: '4px 8px',
                             }}>
@@ -667,7 +667,7 @@ div.toolbar select.toolbar-select.size-select {
                         marginBottom: '12px'
                     }}>
                         <label style={{
-                            fontSize: '16px',
+                            fontSize: '13px',
                             fontWeight: '600',
                             color: '#1f2937',
                             letterSpacing: '-0.025em'

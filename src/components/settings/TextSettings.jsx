@@ -40,7 +40,7 @@ export const TextSettings = ({
                 <div>
                     <h4 style={{
                         margin: 0,
-                        fontSize: '18px',
+                        fontSize: '14px',
                         fontWeight: 700,
                         color: enabled ? '#0e636e' : '#8ba7b3',
                         letterSpacing: '-0.5px',
@@ -50,7 +50,7 @@ export const TextSettings = ({
                     </h4>
                     <p style={{
                         margin: '7px 0 0 0',
-                        fontSize: '15px',
+                        fontSize: '12px',
                         color: enabled ? '#4a4e56' : '#b0b8c2',
                         fontWeight: 400,
                         opacity: enabled ? 0.92 : 0.72,
@@ -70,8 +70,31 @@ export const TextSettings = ({
                 <div style={{
                     padding: '22px 18px 18px 18px',
                     background: '#fff',
-                    borderRadius: '0 0 18px 18px'
-                }}>
+                    borderRadius: '0 0 18px 18px',
+                    maxHeight: '400px',
+                    overflowY: 'auto',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
+                }}
+                className="text-settings-content"
+                >
+                    <style>
+                        {`
+                            .text-settings-content::-webkit-scrollbar {
+                                width: 6px;
+                            }
+                            .text-settings-content::-webkit-scrollbar-track {
+                                background: transparent;
+                            }
+                            .text-settings-content::-webkit-scrollbar-thumb {
+                                background: rgba(156, 163, 175, 0.5);
+                                border-radius: 3px;
+                            }
+                            .text-settings-content::-webkit-scrollbar-thumb:hover {
+                                background: rgba(156, 163, 175, 0.8);
+                            }
+                        `}
+                    </style>
                     <div
                         style={{
                             borderRadius: '8px',
@@ -107,7 +130,7 @@ export const TextSettings = ({
                     borderRadius: '0 0 18px 18px',
                     textAlign: 'center',
                     color: '#adbcc6',
-                    fontSize: '15px',
+                    fontSize: '12px',
                     fontWeight: 400,
                     letterSpacing: '-0.2px'
                 }}>
