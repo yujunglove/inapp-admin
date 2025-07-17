@@ -32,25 +32,25 @@ export function generatePopupHTML(messageId, data) {
     
     let html = '';
     
-    // 모든 팝업에 대해 qdx_popup_wrap 요소를 사용합니다
-    html = `<div id="qdx_popup_wrap" class="qdx_popup_${messageId}" data-key="${messageId}" data-msg-id="${messageId}">`;
-    
     // BAR 타입일 경우 다른 HTML 구조 사용
     if (displayType === 'bar') {
-        html += `<div id="qdx_type_bar" class="${templateClass} qdx_popup_box qdx_pst_${data.location.toLowerCase()}"><span class="qdx_close"><img src="${ICONS.barCloseWhite}" alt=""></span><div class="qdx_cont">`;
+        html = `<div id="qdx_popup_wrap" class="qdx_popup_${messageId}" data-key="${messageId}" data-msg-id="${messageId}">
+            <div id="qdx_type_bar" class="${templateClass} qdx_popup_box qdx_pst_${data.location.toLowerCase()}"><span class="qdx_close"><img src="${ICONS.barCloseWhite}" alt=""></span><div class="qdx_cont">`;
         
         // BAR 타입 컨텐츠 생성
         html += generateBarContent(data, messageId);
         
-        html += `</div></div>`;
+        html += `</div></div>
+        </div>`;
     } else {
         // 기존 다른 타입들의 HTML 구조
-        html += `<div id="qdx_type_${displayType}" class="${templateClass} qdx_popup_box qdx_pst_${data.location.toLowerCase()}">`;
+        html = `<div id="qdx_popup_wrap" class="qdx_popup_${messageId}" data-key="${messageId}" data-msg-id="${messageId}">
+            <div id="qdx_type_${displayType}" class="${templateClass} qdx_popup_box qdx_pst_${data.location.toLowerCase()}">`;
         
         if (data.today === 'Y') {
-            html += `<div class="qdx_close_box"><label class="qdx_close_today"><input type="checkbox" class="qdx_checkbox">오늘 하루 보지 않기</label><span class="qdx_close"><img src="${ICONS.closeWhite}" alt=""></span></div>`;
+            html += `<div class="qdx_close_box" style="height:auto; padding:0; display:flex; justify-content:space-between; align-items:center;"><label class="qdx_close_today"><input type="checkbox" class="qdx_checkbox">오늘 하루 보지 않기</label><span class="qdx_close"><img src="${ICONS.closeWhite}" alt=""></span></div>`;
         } else {
-            html += `<div class="qdx_close_box"><span class="qdx_close"><img src="${ICONS.closeWhite}" alt=""></span></div>`;
+            html += `<div class="qdx_close_box" style="height:auto; padding:0; display:flex; justify-content:flex-end; align-items:center;"><span class="qdx_close"><img src="${ICONS.closeWhite}" alt=""></span></div>`;
         }
         
         html += `<div class="qdx_cont">`;
@@ -63,10 +63,9 @@ export function generatePopupHTML(messageId, data) {
             html += generateRegularContent(data, messageId);
         }
         
-        html += `</div></div>`;
+        html += `</div></div>
+        </div>`;
     }
-    
-    html += `</div>`;
 
     if (displayType === 'slide') {
         setTimeout(() => {
