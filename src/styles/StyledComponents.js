@@ -134,16 +134,16 @@ export const SelectionItem = styled.div.withConfig({
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(22,157,175,0.1), transparent);
+        background: linear-gradient(90deg, transparent, rgba(22, 157, 175, 0.1), transparent);
         transition: left 0.6s ease;
     }
 
     &:hover {
-        border-color: rgba(22,157,175,0.8);
-        color: rgba(22,157,175,0.8);
-        background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+        border-color: rgba(248, 248, 248, 0.8);
+        color: rgba(215, 240, 243, 0.8);
+        background: linear-gradient(135deg, #f8fafc 0%, #fafafa 100%);
         transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 20px 40px rgba(22, 157, 175, 0.2);
+        box-shadow: 0 10px 10px rgba(201, 224, 236, 0.76);
     }
 
     &:hover:before {
@@ -157,7 +157,7 @@ export const SelectionItem = styled.div.withConfig({
     ${props => props.active && `
         &:hover {
             transform: translateY(-6px) scale(1.03);
-            box-shadow: 0 25px 50px rgba(22, 157, 175, 0.3);
+            box-shadow: 0 15px 20px rgba(22, 157, 175, 0.3);
         }
     `}
 `;

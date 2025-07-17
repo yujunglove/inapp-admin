@@ -10,6 +10,7 @@ import {getCurrentItems, getCurrentStepTitle, getCurrentStepNumber, isNextEnable
 import { InAppService } from './services/inAppService';
 import { createDefaultPreviewData } from './config/dbMapping';
 import { generatePopupHTML } from './components/popupGenerator';
+import Draggable from 'react-draggable';
 
 const THEME_MAPPING = {
     BAR: {
@@ -463,92 +464,92 @@ const InAppModule = ({
     const renderPreviewButtons = () => {
         if (currentStep !== 1 && currentStep !== 2) return null;
 
+        // react-draggable 라이브러리 사용
         return (
-            <div style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                zIndex: 100,
-                background: 'white',
-                padding: '16px',
-                borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                border: '1px solid #e5e7eb'
-            }}>
-                <label style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    color: '#374151'
-                }}>
-                    <input
-                        type="checkbox"
-                        checked={previewData?.today === 'Y'}
-                        onChange={(e) => {
-                            setPreviewData(prev => ({
-                                ...prev,
-                                today: e.target.checked ? 'Y' : 'N'
-                            }));
-                        }}
+            <Draggable
+                handle=".drag-handle"
+                defaultPosition={{x: 0, y: 20}}
+                bounds="parent"
+            >
+                <div 
+                    className="draggable-control-panel"
+                    style={{
+                        position: 'absolute',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
+                        zIndex: 100,
+                        background: 'white',
+                        padding: '16px',
+                        paddingTop: '24px',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        border: '1px solid #e5e7eb',
+                        userSelect: 'none',
+                        transition: 'box-shadow 0.2s ease',
+                        width: '160px',
+                        right: '20px'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    }}
+                >
+                    {/* 드래그 핸들 - 이 부분만 드래그 가능 */}
+                    <div 
+                        className="drag-handle"
                         style={{
-                            width: '14px',
-                            height: '14px',
-                            cursor: 'pointer'
+                            position: 'absolute',
+                            top: '6px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: '40px',
+                            height: '4px',
+                            background: '#d1d5db',
+                            borderRadius: '2px',
+                            cursor: 'grab'
                         }}
                     />
-                    오늘하루 안보기
-                </label>
-                
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setShowJsonModal(true);
-                    }}
-                    style={{
-                        padding: '8px 16px',
-                        background: '#fcad27',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
+                    
+                    <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
                         fontSize: '12px',
                         fontWeight: '500',
                         cursor: 'pointer',
-                        width: '100%',
-                        transition: 'all 0.2s ease',
-                        transform: 'translateY(0)',
-                    }}
-                    onMouseEnter={(e) => {
-                        e.target.style.background = '#e09820';
-                        e.target.style.transform = 'translateY(-1px)';
-                        e.target.style.boxShadow = '0 4px 12px rgba(252, 173, 39, 0.3)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.target.style.background = '#fcad27';
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = 'none';
-                    }}
-                >
-                    JSON 보기
-                </button>
-                
-                <div style={{ position: 'relative' }} data-location-menu>
+                        color: '#374151',
+                        marginTop: '8px'
+                    }}>
+                        <input
+                            type="checkbox"
+                            checked={previewData?.today === 'Y'}
+                            onChange={(e) => {
+                                setPreviewData(prev => ({
+                                    ...prev,
+                                    today: e.target.checked ? 'Y' : 'N'
+                                }));
+                            }}
+                            style={{
+                                width: '14px',
+                                height: '14px',
+                                cursor: 'pointer'
+                            }}
+                        />
+                        오늘하루 안보기
+                    </label>
+                    
                     <button
                         type="button"
-                        title="위치 설정"
                         onClick={(e) => {
                             e.preventDefault();
-                            setShowLocationMenu(!showLocationMenu);
+                            setShowJsonModal(true);
                         }}
                         style={{
                             padding: '8px 16px',
-                            background: '#169DAF',
+                            background: '#fcad27',
                             color: 'white',
                             border: 'none',
                             borderRadius: '6px',
@@ -556,82 +557,118 @@ const InAppModule = ({
                             fontWeight: '500',
                             cursor: 'pointer',
                             width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '6px',
                             transition: 'all 0.2s ease',
                             transform: 'translateY(0)',
                         }}
                         onMouseEnter={(e) => {
-                            e.target.style.background = '#127a8a';
+                            e.target.style.background = '#e09820';
                             e.target.style.transform = 'translateY(-1px)';
-                            e.target.style.boxShadow = '0 4px 12px rgba(22, 157, 175, 0.3)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(252, 173, 39, 0.3)';
                         }}
                         onMouseLeave={(e) => {
-                            e.target.style.background = '#169DAF';
+                            e.target.style.background = '#fcad27';
                             e.target.style.transform = 'translateY(0)';
                             e.target.style.boxShadow = 'none';
                         }}
                     >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                            <circle cx="12" cy="10" r="3"/>
-                        </svg>
-                         {previewData?.location || 'TOP'}
+                        JSON 보기
                     </button>
                     
-                    {showLocationMenu && (
-                        <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: '0',
-                            right: '0',
-                            marginTop: '4px',
-                            background: 'white',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                            overflow: 'hidden',
-                            zIndex: 1000
-                        }}>
-                            {['TOP', 'MID', 'BOT'].map(location => (
-                                <button
-                                    type="button"
-                                    key={location}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        handleLocationChange(location);
-                                    }}
-                                    style={{
-                                        width: '100%',
-                                        padding: '8px 12px',
-                                        background: previewData?.location === location ? '#3b82f6' : 'transparent',
-                                        color: previewData?.location === location ? 'white' : '#374151',
-                                        border: 'none',
-                                        fontSize: '12px',
-                                        cursor: 'pointer',
-                                        textAlign: 'left',
-                                        transition: 'all 0.15s ease'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (previewData?.location !== location) {
-                                            e.target.style.background = '#f3f4f6';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (previewData?.location !== location) {
-                                            e.target.style.background = 'transparent';
-                                        }
-                                    }}
-                                >
-                                    {location === 'TOP' ? '상단 (TOP)' : location === 'MID' ? '중앙 (MID)' : '하단 (BOT)'}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                    <div style={{ position: 'relative' }} data-location-menu>
+                        <button
+                            type="button"
+                            title="위치 설정"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setShowLocationMenu(!showLocationMenu);
+                            }}
+                            style={{
+                                padding: '8px 16px',
+                                background: '#169DAF',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                transition: 'all 0.2s ease',
+                                transform: 'translateY(0)',
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = '#127a8a';
+                                e.target.style.transform = 'translateY(-1px)';
+                                e.target.style.boxShadow = '0 4px 12px rgba(22, 157, 175, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = '#169DAF';
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = 'none';
+                            }}
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                             {previewData?.location || 'TOP'}
+                        </button>
+                        
+                        {showLocationMenu && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: '0',
+                                right: '0',
+                                marginTop: '4px',
+                                background: 'white',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                overflow: 'hidden',
+                                zIndex: 1000
+                            }}>
+                                {['TOP', 'MID', 'BOT'].map(location => (
+                                    <button
+                                        type="button"
+                                        key={location}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleLocationChange(location);
+                                        }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px 12px',
+                                            background: previewData?.location === location ? '#3b82f6' : 'transparent',
+                                            color: previewData?.location === location ? 'white' : '#374151',
+                                            border: 'none',
+                                            fontSize: '12px',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            transition: 'all 0.15s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (previewData?.location !== location) {
+                                                e.target.style.background = '#f3f4f6';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (previewData?.location !== location) {
+                                                e.target.style.background = 'transparent';
+                                            }
+                                        }}
+                                    >
+                                        {location === 'TOP' ? '상단 (TOP)' : location === 'MID' ? '중앙 (MID)' : '하단 (BOT)'}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </Draggable>
         );
     };
 
