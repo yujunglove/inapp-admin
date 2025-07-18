@@ -21,14 +21,14 @@ const SelectionGridComponent = ({
                 <SelectionItem
                     key={item.id}
                     itemType={item.id}
-                    active={currentStep === 1 && selections.displayType === item.id}
+                    active={currentStep === 1 && (selections.displayType === item.id || (!selections.displayType && item.id === 'BAR'))}
                     onClick={() => onItemSelect(item.id)}
                 >
                     <ItemImage className={`${item.id}-type`}>
                         <img src={item.image} alt={item.name} />
                     </ItemImage>
                     <ItemText
-                        active={currentStep === 1 && selections.displayType === item.id}
+                        active={currentStep === 1 && (selections.displayType === item.id || (!selections.displayType && item.id === 'BAR'))}
                     >
                         {item.name}
                     </ItemText>

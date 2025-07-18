@@ -119,7 +119,7 @@ export const ButtonSettings = ({
                                             Object.assign(e.target.style, commonStyles.button.base);
                                         }}
                                     >
-                                        <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
+                                        링크 검증
                                     </button>
                                 </div>
                                 <div style={{ position: 'relative' }}>

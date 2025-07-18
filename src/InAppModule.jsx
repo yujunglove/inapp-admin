@@ -48,14 +48,7 @@ const InAppModule = ({
         setInitialData(initialData);
     }, [initialData, loading]);
 
-    // 기본 미리보기 데이터 설정
-    useEffect(() => {
-        if (!selections.displayType && !previewData) {
-            setPreviewData(createDefaultPreviewData("BAR"));
-        }
-    }, [selections.displayType, previewData]);
-
-    // 미리보기 데이터 처리
+    // 미리보기 데이터 처리 (iframe 로딩 후에만 실행)
     useEffect(() => {
         if (currentStep === 1) {
             if (selections.displayType) {
@@ -90,8 +83,15 @@ const InAppModule = ({
         
         // 이미지 설정
         if (preserved.imageEnabled) {
-            if (displayType?.toUpperCase() === 'SLIDE' && preserved.images) {
-                data.images = preserved.images;
+            if (displayType?.toUpperCase() === 'SLIDE' && preserved.images && preserved.images.length > 0) {
+                // SLIDE 타입일 때 보존된 이미지들을 올바른 형식으로 변환
+                data.images = preserved.images.map((img, index) => ({
+                    seq: index + 1,
+                    url: img.url || '',
+                    action: img.action === 'link' ? 'L' : '',
+                    linkUrl: img.linkUrl || '',
+                    linkOpt: img.linkTarget === 'new' ? 'B' : 'S'
+                }));
             } else if (preserved.imageUrl) {
                 data.images = [{
                     seq: 1,
@@ -140,6 +140,21 @@ const InAppModule = ({
                 ...prev,
                 today: e.data.checked ? 'Y' : 'N'
             }));
+        } else if (e.data.type === 'iframe_ready') {
+            // iframe이 로드 완료되면 초기 미리보기 데이터 전송
+            if (!previewData && !loading) {
+                const defaultData = createDefaultPreviewData("BAR");
+                setPreviewData(defaultData);
+                previewIframeRef.current?.postMessage({
+                    type: 'show_preview',
+                    data: defaultData
+                });
+            } else if (previewData) {
+                previewIframeRef.current?.postMessage({
+                    type: 'show_preview',
+                    data: previewData
+                });
+            }
         }
     };
 

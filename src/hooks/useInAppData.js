@@ -48,7 +48,7 @@ export const useInAppData = (config) => {
 export const useInAppSelections = (onDataChange, loading) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [selections, setSelections] = useState({
-        displayType: null,
+        displayType: 'BAR',  // BAR를 기본값으로 설정
         position: 'TOP'
     });
     
@@ -65,6 +65,16 @@ export const useInAppSelections = (onDataChange, loading) => {
         buttons: [],
         images: []
     });
+
+    // 로딩 완료 후 기본값 설정
+    useEffect(() => {
+        if (!loading && !selections.displayType) {
+            setSelections(prev => ({
+                ...prev,
+                displayType: 'BAR'
+            }));
+        }
+    }, [loading]);
 
     useEffect(() => {
         if (!loading) {

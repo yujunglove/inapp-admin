@@ -343,6 +343,6 @@ export const ValidationButton = ({ onClick, onMouseEnter, onMouseLeave }) => (
     onMouseEnter={onMouseEnter}
     onMouseLeave={onMouseLeave}
   >
-    <label style={{ display: 'block', fontWeight: '700' }}>링크 검증</label>
+    링크 검증
   </button>
 );

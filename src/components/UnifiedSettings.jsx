@@ -1,6 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { validateSettings, clearFieldError, validateJsonData } from '../utils/ValidationUtils';
-import { getDisplayConfig, getActiveComponents, createInitialSettings, canToggleComponent } from '../config/appConfig';
+import { getDisplayConfig, getActiveComponents, createInitialSettings, canToggleComponent, getTemplateConfig } from '../config/appConfig';
 import { generateInAppJsonData } from '../utils/jsonDataGenerator';
 import { LocationSettings } from './settings/LocationSettings';
 import { ImageSettings } from './settings/ImageSettings';
@@ -81,7 +81,6 @@ export const UnifiedSettings = forwardRef(({
 
         if (preservedSettings.buttons && preservedSettings.buttons.length > 0) {
             setButtons(preservedSettings.buttons);
-            // 🔥 보존된 버튼들의 최대 ID + 1로 nextButtonId 설정
             const maxId = Math.max(...preservedSettings.buttons.map(btn => btn.id));
             setNextButtonId(maxId + 1);
         } else {
@@ -179,24 +178,25 @@ export const UnifiedSettings = forwardRef(({
                 // 2. URL 객체로 파싱 가능한지 확인
                 new URL(url);
                 isValid = true;
+                
+                // 3. 추가 검증 규칙
+                const domainMatch = url.match(/^https?:\/\/([^\/]+)/);
+                if (domainMatch) {
+                    const domain = domainMatch[1];
+                    
+                    // localhost 또는 IP 주소 검증
+                    const isLocalhost = domain.toLowerCase().includes('localhost');
+                    const isIpAddress = /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/.test(domain);
+                    const isValidDomain = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d+)?$/.test(domain);
+                    
+                    // localhost, IP 주소, 또는 유효한 도메인이어야 함
+                    if (!(isLocalhost || isIpAddress || isValidDomain)) {
+                        isValid = false;
+                    }
+                }
             }
         } catch (e) {
             isValid = false;
-        }
-
-        // 3. 추가 검증 규칙
-        if (isValid) {
-            // 도메인 부분 확인
-            const domainMatch = url.match(/^https?:\/\/([^\/]+)/);
-            if (domainMatch) {
-                const domain = domainMatch[1];
-                // 유효한 도메인 형식인지 확인 (최소한 점이 있어야 함)
-                if (!domain.includes('.') || domain.endsWith('.') || domain.startsWith('.')) {
-                    isValid = false;
-                }
-            } else {
-                isValid = false;
-            }
         }
 
         if (buttonId) {
@@ -314,10 +314,6 @@ export const UnifiedSettings = forwardRef(({
             };
             setButtons(prev => [...prev, newButton]);
             setNextButtonId(prev => prev + 1);
-            
-            // 🔥 디버깅: 버튼 추가 로그
-            console.log('🔘 새 버튼 추가:', newButton);
-            console.log('🔘 현재 버튼 배열:', [...buttons, newButton]);
         }
     };
 
@@ -343,13 +339,10 @@ export const UnifiedSettings = forwardRef(({
     };
 
     const updateButton = (buttonId, field, value) => {
-        console.log('🔘 버튼 업데이트:', { buttonId, field, value });
-        
         setButtons(prev => {
             const updated = prev.map(btn =>
                 btn.id === buttonId ? { ...btn, [field]: value } : btn
             );
-            console.log('🔘 업데이트된 버튼 배열:', updated);
             return updated;
         });
 
@@ -432,25 +425,36 @@ export const UnifiedSettings = forwardRef(({
             }
             
             if (!settings.imageEnabled && !settings.textEnabled && !settings.buttonEnabled) {
-                jsonData.msg = {
-                    title: `${displayType?.toUpperCase()}형 미리보기`,
-                    text: "이것은 미리보기 내용입니다."
-                };
-                jsonData.images = [{
-                    seq: 1,
-                    url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhFjJgDxmK9CVk3XxTiitDyZLIOKJvtZNLrg&s",
-                    action: "",
-                    linkUrl: "",
-                    linkOpt: ""
-                }];
-                jsonData.show = ['images', 'msg'];
+                // displayType에 따른 기본 컴포넌트 상태로 복원 (1단계에서 보던 상태)
+                const defaultConfig = getDisplayConfig(displayType);
+                const template = getTemplateConfig(defaultConfig.template);
+                
+                if (template.hasImage) {
+                    jsonData.images = [{
+                        seq: 1,
+                        url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhFjJgDxmK9CVk3XxTiitDyZLIOKJvtZNLrg&s",
+                        action: "",
+                        linkUrl: "",
+                        linkOpt: ""
+                    }];
+                    if (!jsonData.show.includes('images')) {
+                        jsonData.show.push('images');
+                    }
+                }
+                
+                if (template.hasText) {
+                    jsonData.msg = {
+                        title: `${displayType?.toUpperCase()}형 미리보기`,
+                        text: "이것은 미리보기 내용입니다."
+                    };
+                    if (!jsonData.show.includes('msg')) {
+                        jsonData.show.push('msg');
+                    }
+                }
             }
         }
         
         const validation = validateJsonData(jsonData);
-        if (!validation.isValid) {
-            console.warn('⚠️ JSON 검증 경고:', validation.errors);
-        }
 
         return jsonData;
     };

@@ -76,6 +76,11 @@ const IFRAME_CONTENT = `
             localQdx = window.QdxRenderer;
             qdxReady = true;
             
+            // 초기화 완료 알림
+            window.parent.postMessage({
+                type: 'iframe_ready'
+            }, '*');
+            
             if (pendingPreview) {
                 showPreview(pendingPreview);
                 pendingPreview = null;
