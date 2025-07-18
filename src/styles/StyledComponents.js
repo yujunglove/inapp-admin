@@ -238,7 +238,8 @@ export const ItemText = styled.div.withConfig({
 `;
 
 export const BackButton = styled.button.attrs({
-    className: 'back-button'
+    className: 'back-button',
+    type: 'button'  // 명시적으로 button 타입 지정
 })`
     display: flex;
     align-items: center;
@@ -272,7 +273,8 @@ export const BackButton = styled.button.attrs({
 `;
 
 export const NextButton = styled.button.attrs({
-    className: 'next-button'
+    className: 'next-button',
+    type: 'button'  // 명시적으로 button 타입 지정
 })`
     display: flex;
     align-items: center;
@@ -340,7 +342,8 @@ export const PreviewControlsArea = styled.div.attrs({
 `;
 
 export const PreviewControlButton = styled.button.attrs({
-    className: 'preview-control-button'
+    className: 'preview-control-button',
+    type: 'button'  // 명시적으로 button 타입 지정
 })`
     padding: 8px 16px;
     border: none;

@@ -75,6 +75,7 @@ const PreviewControls = ({ previewData, onTodayToggle, onJsonView, onLocationCha
                         {['TOP', 'MID', 'BOT'].map(location => (
                             <button
                                 key={location}
+                                type="button"
                                 className={previewData?.location === location ? 'active' : ''}
                                 onClick={(e) => {
                                     e.preventDefault();

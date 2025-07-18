@@ -52,14 +52,11 @@ export const ButtonSettings = ({
                 )}
             </div>
             {enabled ? (
-                <div style={{
-                    ...getCardContentStyle(enabled),
-                    ...commonStyles.scrollArea.base
-                }}
+                <div style={getCardContentStyle(enabled)}
                 className="button-settings-content"
                 >
                     <style>
-                        {commonStyles.scrollArea.webkit}
+                        {/* 스크롤 관련 스타일 제거 */}
                     </style>
                     {buttons.map((button, index) => (
                         <div key={button.id} style={commonStyles.itemBox.base}>

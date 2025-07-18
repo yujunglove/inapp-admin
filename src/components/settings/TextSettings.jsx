@@ -42,15 +42,11 @@ export const TextSettings = ({
                 )}
             </div>
             {enabled ? (
-                <div style={{
-                    ...getCardContentStyle(enabled),
-                    ...commonStyles.scrollArea.base,
-                    maxHeight: '400px'
-                }}
+                <div style={getCardContentStyle(enabled)}
                 className="text-settings-content"
                 >
                     <style>
-                        {commonStyles.scrollArea.webkit}
+                        {/* 스크롤 관련 스타일 제거 */}
                     </style>
                     <div
                         style={{

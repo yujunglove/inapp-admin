@@ -164,33 +164,43 @@ const InAppModule = ({
         const buttons = settingsRef.current?.getButtonsData?.() || [];
         const themeInfo = calculateTheme(selections.displayType, settings, buttons);
         
-        const validatedData = {
+        // 미리보기용 데이터 (CSS 적용을 위한 추가 필드 포함)
+        const previewData = {
             ...jsonData,
             display: selections.displayType || 'BOX',
+            template: themeInfo.template,
             code: themeInfo.code,
-            cssClass: themeInfo.cssClass,
-            show: themeInfo.show
+            cssClass: themeInfo.cssClass
         };
 
-        setPreviewData(validatedData);
+        setPreviewData(previewData);
     };
 
-    // JSON 형식 변환
-    const convertToNewJsonFormat = () => {
-        const settings = settingsRef.current?.getSettingsData?.() || {};
-        const buttons = settingsRef.current?.getButtonsData?.() || [];
-        const themeInfo = calculateTheme(selections.displayType, settings, buttons);
-
-        return {
-            display: selections.displayType || 'BOX',
-            theme: themeInfo.theme,
-            show: themeInfo.show,
-            location: settings.location || 'TOP',
-            images: settings.images || [],
-            msg: settings.msg || {},
-            today: previewData?.today || 'N',
-            buttons: buttons
-        };
+    // 현재 JSON 데이터 반환 (깔끔한 JSON 형식)
+    const getCurrentJsonData = () => {
+        if (currentStep === 2 && settingsRef.current) {
+            // 2단계에서는 설정에서 깔끔한 JSON 데이터 생성
+            return settingsRef.current.getJsonData();
+        } else {
+            // 1단계에서는 현재 previewData에서 불필요한 필드 제거
+            if (previewData) {
+                const cleanData = { ...previewData };
+                // template, code, cssClass 등 미리보기 전용 필드 제거
+                delete cleanData.template;
+                delete cleanData.code;
+                delete cleanData.cssClass;
+                return cleanData;
+            } else {
+                // 기본 데이터에서도 불필요한 필드 제거
+                const defaultData = createDefaultPreviewData('BAR');
+                if (defaultData) {
+                    delete defaultData.template;
+                    delete defaultData.code;
+                    delete defaultData.cssClass;
+                }
+                return defaultData;
+            }
+        }
     };
 
     // 제출/저장 처리
@@ -361,7 +371,7 @@ const InAppModule = ({
 
             <JsonModal
                 show={showJsonModal}
-                jsonData={currentStep === 2 && settingsRef.current ? convertToNewJsonFormat() : previewData}
+                jsonData={getCurrentJsonData()}
                 onClose={() => setShowJsonModal(false)}
                 onCopy={() => setShowJsonModal(false)}
             />
